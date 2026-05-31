@@ -1,4 +1,4 @@
-name: Build REVERBEX by Piradex
+name: ReverbEx-Piradex-macOS
 
 on:
   push:
