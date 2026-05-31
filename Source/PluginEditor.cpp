@@ -63,4 +63,29 @@ void ReverbAudioProcessorEditor::paint (juce::Graphics& g)
 
     g.setColour (colTextMuted.withAlpha (0.5f));
     g.setFont (juce::Font (10.0f));
-    g.drawText ("v1.0  |  Piradex", 0, getHeight() - 18, getWidth(), 14,
+    g.drawText ("v1.0 by Piradex", 0, getHeight() - 18, getWidth(), 14,
+                juce::Justification::centred, false);
+}
+
+void ReverbAudioProcessorEditor::resized()
+{
+    const int headerH   = 65;
+    const int footerH   = 20;
+    const int contentH  = getHeight() - headerH - footerH;
+    const int knobW     = getWidth() / 4;
+    const int knobAreaH = contentH - 50;
+    const int labelH    = 20;
+    const int topY      = headerH + 15;
+
+    auto placeKnob = [&](KnobSection& section, int col)
+    {
+        int x = col * knobW;
+        section.slider->setBounds (x + 10, topY, knobW - 20, knobAreaH);
+        section.label ->setBounds (x, topY + knobAreaH, knobW, labelH);
+    };
+
+    placeKnob (roomSizeKnob, 0);
+    placeKnob (dampingKnob,  1);
+    placeKnob (widthKnob,    2);
+    placeKnob (mixKnob,      3);
+}
