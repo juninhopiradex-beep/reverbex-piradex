@@ -18,13 +18,20 @@ jobs:
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Compilar plugin
-        run: cmake --build build --config Release
+        run: cmake --build build --config Release --parallel
 
       - name: Empacotar artefactos
         run: |
           mkdir -p artifacts
-          cp -r build/ReverbPlugin_artefacts/Release/VST3 artifacts/ || true
-          cp -r build/ReverbPlugin_artefacts/Release/AU artifacts/ || true
+          find build -name "*.vst3" -exec cp -r {} artifacts/ \; || true
+          find build -name "*.component" -exec cp -r {} artifacts/ \; || true
+
+      - name: Guardar plugin compilado
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReverbEx-Piradex-macOS
+          path: artifacts/
+          retention-days: 30
 
       - name: Guardar plugin compilado
         uses: actions/upload-artifact@v4
