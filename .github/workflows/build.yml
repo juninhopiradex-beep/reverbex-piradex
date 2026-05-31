@@ -1,4 +1,4 @@
-name: ReverbEx-Piradex-macOS
+name: ReverbEx-Piradex-macOS-v2
 
 on:
   push:
@@ -29,13 +29,13 @@ jobs:
       - name: Guardar plugin compilado
         uses: actions/upload-artifact@v4
         with:
-          name: ReverbEx-Piradex-macOS
+          name: ReverbEx-Piradex-macOS-v2
           path: artifacts/
           retention-days: 30
 
       - name: Guardar plugin compilado
         uses: actions/upload-artifact@v4
         with:
-          name: ReverbEx-Piradex-macOS
+          name: ReverbEx-Piradex-macOS-v2
           path: artifacts/
           retention-days: 30
