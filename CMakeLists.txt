@@ -5,7 +5,7 @@ include(FetchContent)
 FetchContent_Declare(
     JUCE
     GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-    GIT_TAG        8.0.4
+    GIT_TAG        7.0.12
 )
 FetchContent_MakeAvailable(JUCE)
 juce_add_plugin(ReverbPlugin
@@ -41,6 +41,4 @@ target_compile_definitions(ReverbPlugin PUBLIC
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0
-    JUCE_MODAL_LOOPS_PERMITTED=1
-    JUCE_COREGRAPHICS_DRAW_ASYNC=0
 )
