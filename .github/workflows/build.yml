@@ -1,4 +1,4 @@
-name: Build REVERBEX by Piradex
+name: Build REVERBEX by Piradex v2
 
 on:
   push:
