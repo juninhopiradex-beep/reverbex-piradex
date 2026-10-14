@@ -1,0 +1,217 @@
+name: Build ROOM-X by Piradex (macOS + Windows)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ROOM-X/**"
+      - ".github/workflows/roomx.yml"
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: ROOM-X
+
+env:
+  VERSAO: "1.0.0"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  testes-dsp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Testes numéricos do DSP e da camada musical
+        run: |
+          g++ -O2 -std=c++17 -ISource tests/test_dsp.cpp Source/dsp/*.cpp Source/music/*.cpp -o test_dsp
+          ./test_dsp
+
+  # ---------------------------------------------------------------------------
+  testes-plugin:
+    needs: testes-dsp
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependências (JUCE em Linux)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libasound2-dev libfreetype-dev libfontconfig1-dev libx11-dev libxcomposite-dev \
+            libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libgl1-mesa-dev ninja-build xvfb
+      - name: Compilar plugin + testes
+        run: |
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_FLAGS_RELWITHDEBINFO=-O2 -DROOMX_BUILD_TESTS=ON
+          cmake --build build --target roomx_plugin_test
+      - name: Testes do plugin (licença, transparência, estado, presets, taxas) + capturas da UI
+        run: xvfb-run -a build/roomx_plugin_test capturas
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ROOM-X-capturas-UI
+          path: ROOM-X/capturas/*.png
+
+  # ---------------------------------------------------------------------------
+  macos:
+    needs: testes-dsp
+    runs-on: macos-14
+    env:
+      ART: build/RoomX_artefacts/Release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode
+        run: xcodebuild -version
+
+      - name: Configurar (Universal 2: Intel + Apple Silicon, macOS 10.13+)
+        run: >
+          cmake -B build -G Xcode
+          -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
+
+      - name: Compilar VST3 + AU
+        run: cmake --build build --config Release --target RoomX_VST3 RoomX_AU -- -quiet
+
+      - name: Verificar arquiteturas e versão mínima do macOS
+        run: |
+          for b in "$ART/VST3/ROOM-X by Piradex.vst3/Contents/MacOS/ROOM-X by Piradex" \
+                   "$ART/AU/ROOM-X by Piradex.component/Contents/MacOS/ROOM-X by Piradex"; do
+            echo "== $b"
+            archs=$(lipo -archs "$b"); echo "arquiteturas: $archs"
+            [[ "$archs" == *x86_64* && "$archs" == *arm64* ]] || { echo "FALTA uma arquitetura"; exit 1; }
+            minos=$(otool -arch x86_64 -l "$b" | awk '/LC_VERSION_MIN_MACOSX|LC_BUILD_VERSION/{f=1} f&&/(version|minos)/{print $2; exit}')
+            echo "macOS mínimo (Intel): $minos"
+            [[ "$minos" == "10.13" ]] || { echo "Versão mínima inesperada"; exit 1; }
+          done
+
+      - name: Assinar ad-hoc
+        run: |
+          codesign --force --deep -s - "$ART/VST3/ROOM-X by Piradex.vst3"
+          codesign --force --deep -s - "$ART/AU/ROOM-X by Piradex.component"
+
+      - name: Validar Audio Unit (auval, Apple Silicon e Intel/Rosetta)
+        run: |
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -R "$ART/AU/ROOM-X by Piradex.component" ~/Library/Audio/Plug-Ins/Components/
+          killall -9 AudioComponentRegistrar || true
+          sleep 3
+          auval -a | grep -i piradex || true
+          auval -v aumf RmX1 Prdx
+          softwareupdate --install-rosetta --agree-to-license || true
+          arch -x86_64 auval -v aumf RmX1 Prdx
+
+      - name: Validar com pluginval
+        continue-on-error: true
+        run: |
+          curl -sSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip
+          unzip -q pluginval.zip
+          set -o pipefail
+          pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --timeout-ms 300000 \
+            --validate "$ART/VST3/ROOM-X by Piradex.vst3" 2>&1 | tee pluginval-macOS.log
+
+      - name: Criar instalador .pkg e .dmg
+        run: |
+          mkdir -p root/Library/Audio/Plug-Ins/VST3 root/Library/Audio/Plug-Ins/Components
+          cp -R "$ART/VST3/ROOM-X by Piradex.vst3" root/Library/Audio/Plug-Ins/VST3/
+          cp -R "$ART/AU/ROOM-X by Piradex.component" root/Library/Audio/Plug-Ins/Components/
+          pkgbuild --root root --identifier com.piradex.roomx.plugins --version "$VERSAO" \
+                   --install-location / --scripts installer/scripts roomx-plugins.pkg
+          productbuild --distribution installer/distribution.xml --resources installer \
+                       --package-path . "ROOM-X by Piradex $VERSAO.pkg"
+          mkdir -p "dmg/Plugins"
+          cp "ROOM-X by Piradex $VERSAO.pkg" dmg/
+          cp installer/LEIA-ME.txt dmg/
+          cp -R "$ART/VST3/ROOM-X by Piradex.vst3" "$ART/AU/ROOM-X by Piradex.component" dmg/Plugins/
+          hdiutil create -volname "ROOM-X by Piradex" -srcfolder dmg -ov -format UDZO "ROOM-X-by-Piradex-$VERSAO-macOS.dmg"
+          ls -la *.pkg *.dmg
+
+      # Assinatura Developer ID + notarização: só quando existirem os segredos
+      # MACOS_CERT_P12 / MACOS_CERT_PASSWORD / AC_API_KEY... (nunca no repositório).
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ROOM-X-by-Piradex-macOS
+          path: |
+            ROOM-X/ROOM-X-by-Piradex-*-macOS.dmg
+            ROOM-X/pluginval-macOS.log
+
+  # ---------------------------------------------------------------------------
+  windows:
+    needs: testes-dsp
+    runs-on: windows-2022
+    env:
+      ART: build/RoomX_artefacts/Release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar (x64, Visual Studio 2022)
+        run: cmake -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Compilar VST3
+        run: cmake --build build --config Release --target RoomX_VST3 --parallel 4
+
+      - name: Verificar binário x64 e dependências
+        shell: pwsh
+        run: |
+          $dll = "$env:ART/VST3/ROOM-X by Piradex.vst3/Contents/x86_64-win/ROOM-X by Piradex.vst3"
+          if (!(Test-Path $dll)) { throw "VST3 não encontrado" }
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+          $dumpbin = Get-ChildItem "$vs\VC\Tools\MSVC" -Recurse -Filter dumpbin.exe | Where-Object { $_.FullName -like "*Hostx64\x64*" } | Select-Object -First 1
+          & $dumpbin.FullName /headers $dll | Select-String "machine"
+          $deps = & $dumpbin.FullName /dependents $dll
+          $deps
+          if ($deps -match "VCRUNTIME|MSVCP") { throw "Depende do VC++ Redistributable (runtime devia estar embutido)" }
+
+      - name: Validar com pluginval
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_Windows.zip -OutFile pluginval.zip
+          Expand-Archive pluginval.zip -DestinationPath pv
+          & .\pv\pluginval.exe --strictness-level 5 --timeout-ms 300000 --validate "$env:ART/VST3/ROOM-X by Piradex.vst3" 2>&1 | Tee-Object -FilePath pluginval-Windows.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Criar instalador (Inno Setup) e .zip
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $iscc)) { choco install innosetup -y --no-progress; }
+          & $iscc "/DVersao=$env:VERSAO" installer\windows.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup falhou" }
+          Compress-Archive -Path "$env:ART/VST3/ROOM-X by Piradex.vst3", installer/LEIA-ME-Windows.txt -DestinationPath "out-win/ROOM-X-by-Piradex-$env:VERSAO-Windows-VST3.zip"
+          Get-ChildItem out-win
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ROOM-X-by-Piradex-Windows
+          path: |
+            ROOM-X/out-win/*
+            ROOM-X/pluginval-Windows.log
+
+  # ---------------------------------------------------------------------------
+  publicar:
+    needs: [macos, windows, testes-plugin]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publicar pré-lançamento (macOS + Windows)
+        run: |
+          ls -laR dist
+          TAG="roomx-v$VERSAO-beta"
+          gh release delete "$TAG" -y --cleanup-tag -R "$GITHUB_REPOSITORY" || true
+          FICHEIROS=$(find dist -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.zip' \))
+          echo "$FICHEIROS"
+          gh release create "$TAG" $FICHEIROS -R "$GITHUB_REPOSITORY" \
+            --prerelease --target "$GITHUB_SHA" --title "ROOM-X by Piradex $VERSAO (beta)" \
+            --notes "macOS (10.13+, Intel e Apple Silicon, AU + VST3): ROOM-X-by-Piradex-$VERSAO-macOS.dmg · Windows 10/11 64 bits (VST3): ROOM-X-by-Piradex-$VERSAO-Windows-Setup.exe (ou o .zip para instalação manual)."

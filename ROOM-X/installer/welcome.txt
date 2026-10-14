@@ -1,0 +1,10 @@
+ROOM-X by Piradex 1.0.0
+
+Reverb modal musical: a sala ressoa nas notas, acordes, escalas, sequências ou MIDI que escolher.
+
+Instala:
+  • VST3  → /Library/Audio/Plug-Ins/VST3
+  • AU    → /Library/Audio/Plug-Ins/Components
+
+Compatível com macOS 10.13 ou superior, Macs Intel e Apple Silicon.
+Ao abrir o plugin pela primeira vez é pedida a senha.

@@ -1,0 +1,21 @@
+﻿ROOM-X by Piradex — Windows 10 / 11 (64 bits)
+
+O instalador coloca o plugin VST3 em:
+  C:\Program Files\Common Files\VST3\ROOM-X by Piradex.vst3
+
+Depois de instalar:
+  1. Abra o DAW (Ableton, FL Studio, Cubase, Reaper, Studio One, Bitwig...).
+  2. Peça ao DAW para procurar plugins de novo, se não aparecer logo.
+  3. Procure "ROOM-X by Piradex" (fabricante: Piradex).
+  4. Na primeira vez que abrir o plugin, introduza a senha.
+     Enquanto não houver senha, o ROOM-X deixa o áudio passar intacto.
+
+Se o Windows mostrar "O Windows protegeu o seu PC":
+  clique em "Mais informações" → "Executar mesmo assim".
+  (O instalador ainda não tem assinatura digital paga.)
+
+Instalação manual (sem instalador): copie a pasta "ROOM-X by Piradex.vst3"
+do ficheiro .zip para C:\Program Files\Common Files\VST3\
+
+Presets do utilizador: Documentos\Piradex\ROOM-X\User Presets
+Suporte: juninhopiradex@hotmail.com · www.beatfreakstudio.com/loja
