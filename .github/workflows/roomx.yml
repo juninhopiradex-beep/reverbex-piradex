@@ -61,7 +61,7 @@ jobs:
       - name: Xcode
         run: xcodebuild -version
 
-      - name: Configurar (Universal 2: Intel + Apple Silicon, macOS 10.13+)
+      - name: "Configurar (Universal 2: Intel + Apple Silicon, macOS 10.13+)"
         run: >
           cmake -B build -G Xcode
           -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
