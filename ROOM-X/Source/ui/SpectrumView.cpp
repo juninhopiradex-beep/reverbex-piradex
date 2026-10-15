@@ -199,9 +199,9 @@ juce::String SpectrumView::describe (Drag d) const
     };
     switch (d)
     {
-        case Drag::RangeLow:  return U ("Temper Range (grave): ") + noteTxt (rangeLow.get());
-        case Drag::RangeHigh: return U ("Temper Range (agudo): ") + noteTxt (rangeHigh.get());
-        case Drag::RangeBoth: return U ("Temper Range: ") + music::noteName (juce::roundToInt (rangeLow.get()), flats) + " – "
+        case Drag::RangeLow:  return U ("Tempero Range (grave): ") + noteTxt (rangeLow.get());
+        case Drag::RangeHigh: return U ("Tempero Range (agudo): ") + noteTxt (rangeHigh.get());
+        case Drag::RangeBoth: return U ("Tempero Range: ") + music::noteName (juce::roundToInt (rangeLow.get()), flats) + " – "
                                    + music::noteName (juce::roundToInt (rangeHigh.get()), flats);
         case Drag::LowCut:    return "Low Cut: " + P::formatHz (lowCut.get());
         case Drag::HighCut:   return "High Cut: " + P::formatHz (highCut.get());

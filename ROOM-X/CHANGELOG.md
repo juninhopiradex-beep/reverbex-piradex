@@ -5,7 +5,7 @@ Primeira versão completa.
 
 ### Áudio
 - Motor híbrido original: reflexões iniciais multi-tap determinísticas, FDN de 16 linhas com matriz de rotações de Givens (estável para qualquer Density), banco modal de 121 ressoadores TPT-SVF (D#0–D#10).
-- Temper (−100…+100), Note Width (1–99 %), Target Early/All/Late (bancos separados para reflexões e cauda), Temper Range.
+- Tempero (−100…+100), Note Width (1–99 %), Target Early/All/Late (bancos separados para reflexões e cauda), Tempero Range.
 - Pre-Delay livre (0–2 s) ou sincronizado; Mix potência constante; Decay 0.01–30x; Size 50–200 %; Position; Density; Offset (SSB, ±500 Hz); Input/Output; Kill Dry; Dual Mono; Bypass com rampa linear e cópia exacta da entrada.
 - Low/High Cut do wet (12/36 dB/oct). Latência 0. Sem alocação/locks no processBlock.
 - 29 espaços originais em 5 categorias. Modo Eco (FDN de 8 linhas + analisador mais lento).
@@ -18,7 +18,7 @@ Primeira versão completa.
 
 ### Interface
 - Base grafite 1180×800 escalável (70–150 %) com acento animado por Target (coral / teal / azul eléctrico).
-- NoteScape radial segmentado (energia real do wet por classe de altura + modelo do Temper), dial central Temper/Note Width, espectro wet com Temper Range e filtros arrastáveis.
+- NoteScape radial segmentado (energia real do wet por classe de altura + modelo do Tempero), dial central Tempero/Note Width, espectro wet com Tempero Range e filtros arrastáveis.
 - Presets: 60 de fábrica + 11 tutoriais, presets do utilizador (.roomx), importar, A/B com cópia nos dois sentidos, Undo/Redo, Note Lock, Mix Lock.
 
 ### Licença

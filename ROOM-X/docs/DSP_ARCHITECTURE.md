@@ -38,10 +38,10 @@ Para cada amostra:
 y = low + high + midGain · mid + resGain · Σ g_k · BP_k(x)
 ```
 
-- `low`/`high` = espectro fora do **Temper Range** (Butterworth de 4.ª ordem), intocado.
-- `mid = x − low − high` → reconstrução perfeita com Temper = 0 (o banco é contornado bit a bit).
-- **Temper > 0**: atenua o resto (`midGain = (1−t)^1.5`) e soma os ressoadores das notas seleccionadas com compensação de nível pela largura de banda total seleccionada.
-- **Temper < 0**: subtrai os ressoadores das notas seleccionadas (entalhes musicais) mantendo o resto.
+- `low`/`high` = espectro fora do **Tempero Range** (Butterworth de 4.ª ordem), intocado.
+- `mid = x − low − high` → reconstrução perfeita com Tempero = 0 (o banco é contornado bit a bit).
+- **Tempero > 0**: atenua o resto (`midGain = (1−t)^1.5`) e soma os ressoadores das notas seleccionadas com compensação de nível pela largura de banda total seleccionada.
+- **Tempero < 0**: subtrai os ressoadores das notas seleccionadas (entalhes musicais) mantendo o resto.
 - **Note Width** → largura de banda de 0.03 a 1.6 semitons (curva de potência), consistente em todas as oitavas.
 - No caminho Early os ressoadores têm largura mínima de 3 Hz para não "tocarem" para sempre.
 - Só os ressoadores activos são calculados (processados aos pares, 4 recursões independentes por iteração → vectorizável). Ganhos por nota com ataque 15 ms / release configurável (MIDI) → mudanças de acorde sem cliques.
@@ -66,8 +66,8 @@ Receitas originais em `SpaceLibrary.cpp` (RT60, rácios graves/agudos, janela e 
 ## Medições (testes, 48 kHz, 1 núcleo)
 | Caso | CPU |
 |---|---|
-| Normal (Temper 0) | ~5 % |
-| Temper 60, acorde maior | ~7.5 % |
+| Normal (Tempero 0) | ~5 % |
+| Tempero 60, acorde maior | ~7.5 % |
 | Pior caso: 12 notas, All, Dual Mono | ~22 % |
 | Pior caso em Eco | ~18 % |
 

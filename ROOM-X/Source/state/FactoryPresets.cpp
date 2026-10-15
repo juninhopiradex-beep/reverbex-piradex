@@ -126,11 +126,11 @@ juce::Array<juce::ValueTree> makeFactoryPresets()
     auto add = [&a] (const PB& p) { a.add (p.t); };
 
     // =================================================================== Tutorial
-    add (PB ("01 Normal Reverb", "Tutorial", "Temper a 0: o ROOM-X é uma reverb de estúdio normal. Experimente Decay, Size e Position.")
+    add (PB ("01 Normal Reverb", "Tutorial", "Tempero a 0: o ROOM-X é uma reverb de estúdio normal. Experimente Decay, Size e Position.")
              .sp ("Aurora Hall").mix (30).dec (1.0).size (100));
-    add (PB ("02 Positive Temper - C Major", "Tutorial", "Temper positivo: só as notas C, E e G ressoam na sala. Suba o Temper devagar e oiça a sala afinar.")
+    add (PB ("02 Positive Tempero - C Major", "Tutorial", "Tempero positivo: só as notas C, E e G ressoam na sala. Suba o Tempero devagar e oiça a sala afinar.")
              .sp ("Aurora Hall").mix (35).temper (70).notes (chord (C, "maj")));
-    add (PB ("03 Negative Temper - Harmonic Carve", "Tutorial", "Temper negativo: as notas escolhidas são retiradas da sala — abre espaço para a voz ou o baixo nessas notas.")
+    add (PB ("03 Negative Tempero - Harmonic Carve", "Tutorial", "Tempero negativo: as notas escolhidas são retiradas da sala — abre espaço para a voz ou o baixo nessas notas.")
              .sp ("Grand Arc").mix (35).temper (-85).width (70).notes (chord (C, "maj")));
     add (PB ("04 Narrow Note Width", "Tutorial", "Note Width baixo: ressonâncias puras como sinos, com cauda longa e afinada.")
              .sp ("Celestial Stage").mix (35).temper (85).width (6).notes (chord (A, "min")));

@@ -6,8 +6,8 @@ Base lógica **1180 × 800** px, escalável 70–150 % com proporção fixa (a e
 |---|---|---|
 | Topo | 0–54 | Marca ROOM-X, Undo/Redo, preset (‹ › nome, banco, menu), Guardar, A ⧉ B, Afinação (diapasão), Info, Eco |
 | Espaço | 60–90 | Categoria · nome do espaço · RT60 efectivo (Decay × Size), ‹ › e menu por categorias |
-| Principal | 96–446 | Esquerda: Input + medidor, Pre-Delay (ou divisão sincronizada), Mix (+ cadeado), Decay, Size, Sync, Kill Dry · Centro: NoteScape + dial Temper/Note Width · Direita: Target, Position, Density, Offset, Dual Mono, Output + medidor |
-| Espectro | 454–552 | Botões de declive LC/HC, espectro wet, Temper Range (pegas com nome da nota), pegas LC/HC na base |
+| Principal | 96–446 | Esquerda: Input + medidor, Pre-Delay (ou divisão sincronizada), Mix (+ cadeado), Decay, Size, Sync, Kill Dry · Centro: NoteScape + dial Tempero/Note Width · Direita: Target, Position, Density, Offset, Dual Mono, Output + medidor |
+| Espectro | 454–552 | Botões de declive LC/HC, espectro wet, Tempero Range (pegas com nome da nota), pegas LC/HC na base |
 | Note Selection | 558–594 | Note Lock, Manual / Sequence / MIDI |
 | Painel inferior | 598–768 | Manual (teclas + escala + transpose) · Sequence (linhas, grelha, navegador, timing) · MIDI (actividade, teclado, Octave Repeat, Release) |
 | Rodapé | 772–800 | Versão, estado da licença (BETA a laranja), Eco/afinação alterada, Bypass |
@@ -15,21 +15,21 @@ Base lógica **1180 × 800** px, escalável 70–150 % com proporção fixa (a e
 ## Cor
 - Fundo `#0C0E12`, painéis `#14171D`, linhas `#262B35`, texto `#E6E9EF`, notas seleccionadas prata `#F4F6FA`.
 - Acento por Target, transição ~200 ms (interpolação a 30 Hz): **EARLY `#FF667A`**, **ALL `#40E0C0`**, **LATE `#3DA8FF`**.
-- O acento aplica-se a: arcos dos knobs, dial do Temper, segmentos e contorno do NoteScape, espectro dentro do Temper Range, pegas do range, LEDs das teclas, regiões activas da sequência, botões ligados. O resto fica neutro.
+- O acento aplica-se a: arcos dos knobs, dial do Tempero, segmentos e contorno do NoteScape, espectro dentro do Tempero Range, pegas do range, LEDs das teclas, regiões activas da sequência, botões ligados. O resto fica neutro.
 
 ## NoteScape (original)
 - 12 sectores (C no topo, sentido horário), 9 segmentos em arco por sector entre o dial e o anel das notas.
-- Energia = mistura da energia real do wet por classe de altura (FFT 8192, dentro do Temper Range) com o modelo do Temper (realce das notas seleccionadas, alastramento para vizinhas com Note Width larga).
-- Notas seleccionadas: arco prateado com entalhe + nome a negrito. Temper negativo: sectores ocos e escuros ("buracos").
+- Energia = mistura da energia real do wet por classe de altura (FFT 8192, dentro do Tempero Range) com o modelo do Tempero (realce das notas seleccionadas, alastramento para vizinhas com Note Width larga).
+- Notas seleccionadas: arco prateado com entalhe + nome a negrito. Tempero negativo: sectores ocos e escuros ("buracos").
 - Clicar/arrastar sobre as notas liga/desliga-as (modo Manual).
 
-## Dial Temper / Note Width
-- Disco central: arrastar = Temper (arco bipolar a partir do topo). Anel exterior: arrastar = Note Width (arco prateado simétrico em baixo).
-- Roda do rato = Temper; Shift + roda = Note Width; duplo clique repõe; Shift + arrastar = fino.
+## Dial Tempero / Note Width
+- Disco central: arrastar = Tempero (arco bipolar a partir do topo). Anel exterior: arrastar = Note Width (arco prateado simétrico em baixo).
+- Roda do rato = Tempero; Shift + roda = Note Width; duplo clique repõe; Shift + arrastar = fino.
 
 ## Espectro
 - Eixo log 20 Hz–20 kHz, marcas C1–C9 no topo e Hz em baixo, inclinação +4.5 dB/oct (ruído rosa fica plano).
-- Fora do Temper Range: cinzento e escurecido. Bandas das notas seleccionadas quando há Temper.
+- Fora do Tempero Range: cinzento e escurecido. Bandas das notas seleccionadas quando há Tempero.
 - Pegas do range: arrastar cada uma; arrastar na faixa superior entre elas move as duas; duplo clique repõe.
 - LC/HC: pegas na base (arrastar, Shift = fino, duplo clique repõe, arrastar entre elas desloca a banda); botões laterais alternam 12/36 dB/oct.
 

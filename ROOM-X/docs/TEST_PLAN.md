@@ -3,10 +3,10 @@
 ## Automáticos (correm no GitHub Actions)
 
 ### `tests/test_dsp.cpp` (sem JUCE)
-- Banco modal: Temper +100 realça a nota (A vs A# ≈ +12 dB), Temper −100 escava (≈ −15 dB), Temper Range deixa fora intacto.
+- Banco modal: Tempero +100 realça a nota (A vs A# ≈ +12 dB), Tempero −100 escava (≈ −15 dB), Tempero Range deixa fora intacto.
 - 29 espaços: RT60 medido vs alvo, pico, energia, correlação L/R (decorrelação).
 - Stress: automação aleatória de todos os parâmetros a 44.1 / 96 / 192 kHz, blocos 16–4096 → sempre finito, sem explosão.
-- CPU a 48 kHz: normal, Temper com acorde, pior caso (12 notas, All, Dual), Eco.
+- CPU a 48 kHz: normal, Tempero com acorde, pior caso (12 notas, All, Dual), Eco.
 - Teoria musical, sequenciador (loop, offset, retrigger, transpose), MIDI (CC64, octave repeat).
 
 ### `tests/test_plugin.cpp` (plugin real)
@@ -16,7 +16,7 @@
 - Estado: guardar/repor (parâmetros, sequência, afinação, bemóis), estado de versão futura com campos desconhecidos, sessão antiga sem sequência, Undo.
 - Presets: ≥ 60 + 11, nomes únicos, todos carregam e soam sem NaN e sem ficarem "sujos", Note Lock, A/B, cópia B→A, leitura de `.roomx`.
 - Taxas 44.1–192 kHz × blocos 16–4096 (incl. blocos menores do que o preparado), mono → estéreo.
-- Capturas da interface (login, All, Early, Late com Temper negativo, Sequence, MIDI) → artefacto `ROOM-X-capturas-UI`.
+- Capturas da interface (login, All, Early, Late com Tempero negativo, Sequence, MIDI) → artefacto `ROOM-X-capturas-UI`.
 
 ### Validação de formato
 - macOS: `auval -v aumf RmX1 Prdx` em Apple Silicon e em Intel (Rosetta); pluginval nível 5 (VST3).
@@ -26,7 +26,7 @@
 ## Manuais (por DAW)
 | DAW | Verificar |
 |---|---|
-| Logic Pro (AU) | carregar como efeito e como *MIDI-controlled Effect*; automação de Temper/Target; bounce offline com Sequence |
+| Logic Pro (AU) | carregar como efeito e como *MIDI-controlled Effect*; automação de Tempero/Target; bounce offline com Sequence |
 | Ableton Live | VST3/AU, MIDI de outra pista, loop de 4 compassos com Sequence armado |
 | Cubase / Nuendo | VST3, bypass do host, guardar/reabrir projecto |
 | Studio One | escala da UI em ecrã HiDPI, presets do utilizador |

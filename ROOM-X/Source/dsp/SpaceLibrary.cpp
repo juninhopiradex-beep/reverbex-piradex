@@ -117,7 +117,7 @@ const SpaceDef kSpaces[kNumSpaces] =
       12.0f, 0.70f, 6500.f, 1.00f, 200.f,
       420.f, 30.f, 32, 0.45f, 1.00f, -1.6f, 9000.f, 0.70f, 1.00f,
       40.f, 150.f, 0.96f, 0.80f, 1.20f, 0.18f, 0.f, 160.f, 1.00f, 5101 },
-    { "Harmonic Dust",  C::SpecialFX, "Poeira esparsa e cintilante — ideal para Temper alto",
+    { "Harmonic Dust",  C::SpecialFX, "Poeira esparsa e cintilante — ideal para Tempero alto",
       4.00f, 0.95f, 14000.f, 0.70f, 300.f,
       260.f, 8.f, 32, 0.60f, 1.40f, 0.4f, 16000.f, 0.05f, 1.00f,
       22.f, 34.f, 0.80f, 0.10f, 0.05f, 0.60f, 0.40f, 20.f, 1.00f, 5102 },

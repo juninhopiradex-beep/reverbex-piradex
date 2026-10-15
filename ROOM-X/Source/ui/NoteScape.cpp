@@ -16,8 +16,8 @@ static juce::Point<float> polar (juce::Point<float> c, float r, float a) { retur
 TemperDial::TemperDial (Context& c)
     : ctx (c), temper (c.apvts, P::temper), width (c.apvts, P::noteWidth)
 {
-    setTooltip (U ("Centro: arrastar = Temper  ·  Anel exterior: arrastar = Note Width\n"
-                   "Roda do rato = Temper (Shift = Note Width)  ·  Duplo clique = repor"));
+    setTooltip (U ("Centro: arrastar = Tempero  ·  Anel exterior: arrastar = Note Width\n"
+                   "Roda do rato = Tempero (Shift = Note Width)  ·  Duplo clique = repor"));
 }
 
 bool TemperDial::hitTest (int x, int y)
@@ -105,7 +105,7 @@ void TemperDial::paint (juce::Graphics& g)
     auto tr = disc.reduced (dr * 0.12f);
     g.setColour (hotT ? col::text : col::textDim);
     g.setFont (Fonts::caps (dr * 0.175f, 0.12f));
-    g.drawText ("TEMPER", tr.removeFromTop (tr.getHeight() * 0.27f), juce::Justification::centredBottom);
+    g.drawText ("TEMPERO", tr.removeFromTop (tr.getHeight() * 0.27f), juce::Justification::centredBottom);
     const int tv = juce::roundToInt (temper.get());
     g.setColour (col::text);
     g.setFont (Fonts::title (dr * 0.50f));

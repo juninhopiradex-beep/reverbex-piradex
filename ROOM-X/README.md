@@ -2,17 +2,17 @@
 
 Reverb modal musical para **macOS (AU + VST3, Universal 2: Intel + Apple Silicon, 10.13+)** e **Windows 10/11 (VST3 x64)**. JUCE 8 / C++17.
 
-Uma reverb de estúdio premium cujo campo ressonante se afina por **notas, acordes, escalas, sequências harmónicas ou MIDI ao vivo**. O **Temper** realça (+) ou escava (−) essas ressonâncias; o **Target** decide se actua nas reflexões iniciais (**EARLY**, coral), em tudo (**ALL**, teal) ou na cauda (**LATE**, azul eléctrico) — e o acento da interface muda de cor com ele.
+Uma reverb de estúdio premium cujo campo ressonante se afina por **notas, acordes, escalas, sequências harmónicas ou MIDI ao vivo**. O **Tempero** realça (+) ou escava (−) essas ressonâncias; o **Target** decide se actua nas reflexões iniciais (**EARLY**, coral), em tudo (**ALL**, teal) ou na cauda (**LATE**, azul eléctrico) — e o acento da interface muda de cor com ele.
 
 ![ROOM-X](docs/ui_all.png)
 
 ## Funcionalidades
 - Motor híbrido original: reflexões iniciais esparsas + FDN de 16 linhas + banco modal de 121 ressoadores (D#0–D#10). Latência 0. Ver [docs/DSP_ARCHITECTURE.md](docs/DSP_ARCHITECTURE.md).
-- **Temper** −100…+100 · **Note Width** 1–99 % · **Target** Early/All/Late · **Temper Range** com pegas por nota (D#0–D#10).
+- **Tempero** −100…+100 · **Note Width** 1–99 % · **Target** Early/All/Late · **Tempero Range** com pegas por nota (D#0–D#10).
 - **Pre-Delay** 0–2000 ms ou sincronizado (1/64 … 1/1, pontuado/tercina) · **Mix** potência constante + Mix Lock · **Decay** 0.01–30x (RT60 efectivo mostrado) · **Size** 50–200 % · **Position** 99 E … 99 L · **Density** 1–100 % · **Offset** −500…+500 Hz · **Input/Output** −60…+12 dB com medidores · **Kill Dry** · **Dual Mono** · **Bypass** sem cliques.
 - **Low/High Cut** do wet 20 Hz–20 kHz, 12 ou 36 dB/oct, com arrasto central da banda.
-- **NoteScape**: visualizador radial segmentado de energia por nota (original), com buracos visíveis para Temper negativo; clique nas notas para as ligar/desligar.
-- **Espectro wet** 20 Hz–20 kHz com zonas das notas, Temper Range e filtros.
+- **NoteScape**: visualizador radial segmentado de energia por nota (original), com buracos visíveis para Tempero negativo; clique nas notas para as ligar/desligar.
+- **Espectro wet** 20 Hz–20 kHz com zonas das notas, Tempero Range e filtros.
 - Selecção de notas: **Manual** (12 teclas, pintar por arrasto, Escolher escala: 12 intervalos, 25 acordes, 24 escalas, 13 modos; Transpose; Limpar/Todas/Inverter), **Sequence** (8 linhas, 1–64 compassos, grelha 1/1…1/16 + tercinas, session offset, transpose, retrigger, arm/seguir DAW, criar/mover/redimensionar/duplicar regiões, zoom e navegador) e **MIDI** (todos os canais, sustain CC64, Octave Repeat, release ajustável, medidor de actividade).
 - **29 espaços originais** em 5 categorias · **60 presets de fábrica + 11 tutoriais** · presets do utilizador (.roomx), importar, A/B com cópia nos dois sentidos, Undo/Redo, Note Lock, Mix Lock, modo **Eco**, afinação global (A4 400–500 Hz, ±50 cents, sustenidos/bemóis).
 - Interface escalável 70–150 %.

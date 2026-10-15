@@ -123,16 +123,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
 
     // ---------------------------------------------------------------- Musical
     auto musical = std::make_unique<juce::AudioProcessorParameterGroup> ("musical", "Musical", "|");
-    musical->addChild (std::make_unique<APF> (PID { temper, 1 }, "Temper", juce::NormalisableRange<float> (-100.0f, 100.0f, 0.1f), 0.0f,
+    musical->addChild (std::make_unique<APF> (PID { temper, 1 }, "Tempero", juce::NormalisableRange<float> (-100.0f, 100.0f, 0.1f), 0.0f,
         Attr().withStringFromValueFunction ([] (float v, int) { return juce::String (juce::roundToInt (v)); })));
     musical->addChild (std::make_unique<APF> (PID { noteWidth, 1 }, "Note Width", juce::NormalisableRange<float> (1.0f, 99.0f, 0.1f), 50.0f,
         Attr().withLabel ("%").withStringFromValueFunction (pct)));
     musical->addChild (std::make_unique<APC> (PID { target, 1 }, "Target", juce::StringArray { "Early", "All", "Late" }, 1));
     auto noteText = [] (float v, int) { return juce::String (music::noteName (juce::roundToInt (v), false)); };
-    musical->addChild (std::make_unique<APF> (PID { rangeLow, 1 }, "Temper Range Low",
+    musical->addChild (std::make_unique<APF> (PID { rangeLow, 1 }, "Tempero Range Low",
         juce::NormalisableRange<float> ((float) music::kNoteMin, (float) music::kNoteMax, 0.01f), (float) music::kNoteMin,
         Attr().withStringFromValueFunction (noteText)));
-    musical->addChild (std::make_unique<APF> (PID { rangeHigh, 1 }, "Temper Range High",
+    musical->addChild (std::make_unique<APF> (PID { rangeHigh, 1 }, "Tempero Range High",
         juce::NormalisableRange<float> ((float) music::kNoteMin, (float) music::kNoteMax, 0.01f), (float) music::kNoteMax,
         Attr().withStringFromValueFunction (noteText)));
     layout.add (std::move (musical));

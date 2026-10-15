@@ -539,7 +539,7 @@ void InfoPanel::paint (juce::Graphics& g)
     g.setColour (col::textDim);
     g.setFont (Fonts::text (13.5f));
     g.drawFittedText (U ("Reverb modal musical: escolhe notas, acordes, escalas, uma sequência ou toca MIDI, "
-                         "e o TEMPER realça (+) ou escava (−) essas ressonâncias no espaço. "
+                         "e o TEMPERO realça (+) ou escava (−) essas ressonâncias no espaço. "
                          "TARGET decide se actua nas reflexões (Early), na cauda (Late) ou em tudo.\n\n"
                          "Duplo clique repõe qualquer controlo · Shift + arrastar = ajuste fino.\n"
                          "Suporte: juninhopiradex@hotmail.com  ·  www.beatfreakstudio.com/loja"),
