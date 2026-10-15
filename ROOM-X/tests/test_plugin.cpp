@@ -446,6 +446,115 @@ static void snapshots (const juce::File& dir)
     render ("roomx_midi.png", 900);
 }
 
+
+// -----------------------------------------------------------------------------
+//  Capturas de marketing a 2× (ROOMX_CAPTURAS=pasta): presets reais, sinal
+//  musical (acorde em plucks + bombo + ruído rosa) e transporte simulado.
+// -----------------------------------------------------------------------------
+struct FakePlayHead : juce::AudioPlayHead
+{
+    double ppq = 0.0, bpm = 120.0;
+    bool playing = false;
+    juce::Optional<PositionInfo> getPosition() const override
+    {
+        PositionInfo p;
+        p.setIsPlaying (playing);
+        p.setBpm (bpm);
+        p.setPpqPosition (ppq);
+        p.setTimeSignature (TimeSignature { 4, 4 });
+        return p;
+    }
+};
+
+struct MusicSignal
+{
+    double fs = 48000.0;
+    long long n = 0;
+    float pink[7] {};
+    std::mt19937 rng { 7 };
+    std::vector<int> notes { 53, 57, 60, 64 };       // F maj7
+    float sample (int ch)
+    {
+        const double t = (double) n / fs;
+        const double beat = t * 2.0;                  // 120 bpm
+        const double ph = beat - std::floor (beat);
+        // plucks do acorde, um a cada colcheia, com envelope
+        const double eighth = t * 4.0;
+        const int idx = (int) std::floor (eighth) % (int) notes.size();
+        const double pe = eighth - std::floor (eighth);
+        const double f = 440.0 * std::pow (2.0, (notes[(size_t) idx] + 12 * (idx % 2) - 69) / 12.0);
+        double pl = 0.0;
+        for (int h = 1; h <= 6; ++h) pl += std::sin (2.0 * juce::MathConstants<double>::pi * f * h * t) / (h * 1.4);
+        pl *= std::exp (-pe * 5.0) * 0.22;
+        // bombo
+        const double kf = 50.0 + 90.0 * std::exp (-ph * 30.0);
+        const double kick = std::sin (2.0 * juce::MathConstants<double>::pi * kf * ph * 0.5) * std::exp (-ph * 9.0) * 0.45;
+        // ruído rosa suave
+        std::uniform_real_distribution<float> d (-1.0f, 1.0f);
+        const float w = d (rng);
+        pink[0] = 0.99886f * pink[0] + w * 0.0555179f; pink[1] = 0.99332f * pink[1] + w * 0.0750759f;
+        pink[2] = 0.96900f * pink[2] + w * 0.1538520f; pink[3] = 0.86650f * pink[3] + w * 0.3104856f;
+        const float pk = (pink[0] + pink[1] + pink[2] + pink[3]) * 0.02f;
+        if (ch == 1) ++n;
+        return (float) (pl * (ch == 0 ? 1.0 : 0.85) + kick) + pk;
+    }
+};
+
+static void marketing (const juce::File& dir)
+{
+    std::printf ("[capturas de marketing a 2x] -> %s\n", dir.getFullPathName().toRawUTF8());
+    dir.createDirectory();
+#if defined (ROOMX_ALLOW_TEST_UNLOCK)
+    static_cast<lic::LocalPasswordLicenseProvider&> (lic::License::get()).unlockForTests();
+#endif
+    auto shot = [&] (const char* presetName, const char* file, std::function<void (RoomXProcessor&)> tweak, bool play, std::vector<int> chord)
+    {
+        RoomXProcessor p;
+        FakePlayHead head;
+        p.setPlayHead (&head);
+        p.prepareToPlay (48000.0, 512);
+        for (int i = 0; i < p.presets->entries().size(); ++i)
+            if (p.presets->entries()[i].name == presetName) p.presets->load (i);
+        if (tweak) tweak (p);
+        MusicSignal sig;
+        sig.notes = std::move (chord);
+        head.playing = play;
+        juce::MidiBuffer midi;
+        juce::AudioBuffer<float> buf (2, 512);
+        std::unique_ptr<juce::AudioProcessorEditor> ed (p.createEditor());
+        ed->setSize (RoomXEditor::kBaseW, RoomXEditor::kBaseH);
+        for (int k = 0; k < 600; ++k)        // ~6.4 s de música
+        {
+            for (int i = 0; i < 512; ++i) { buf.setSample (0, i, sig.sample (0)); buf.setSample (1, i, sig.sample (1)); }
+            p.processBlock (buf, midi);
+            head.ppq += 512.0 / 48000.0 * 2.0;
+            if (k % 3 == 0) pump (10);
+        }
+        pump (500);
+        auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, 2.0f);
+        auto f = dir.getChildFile (file);
+        f.deleteFile();
+        juce::FileOutputStream os (f);
+        juce::PNGImageFormat().writeImageToStream (img, os);
+        std::printf ("    %s  %s (%dx%d)\n", file, p.presets->currentName().toRawUTF8(), img.getWidth(), img.getHeight());
+        p.setPlayHead (nullptr);
+    };
+
+    shot ("Major 7 Hall", "roomx-principal@2x.png", nullptr, false, { 53, 57, 60, 64 });
+    shot ("06 Early Only", "roomx-early@2x.png", nullptr, false, { 50, 53, 57, 60 });
+    shot ("Pluck Shimmer Tail", "roomx-late@2x.png", nullptr, false, { 55, 59, 62, 66 });
+    shot ("Carved Vocal Space", "roomx-negativo@2x.png", nullptr, false, { 55, 59, 62, 67 });
+    shot ("Pop Progression Hall", "roomx-sequence@2x.png", nullptr, true, { 48, 52, 55, 60 });
+    shot ("MIDI Chord Follower", "roomx-midi@2x.png", [] (RoomXProcessor& pr)
+    {
+        juce::MidiBuffer m;
+        for (int n : { 45, 52, 57, 60, 64 }) m.addEvent (juce::MidiMessage::noteOn (1, n, (juce::uint8) 100), 0);
+        juce::AudioBuffer<float> b (2, 512);
+        b.clear();
+        pr.processBlock (b, m);
+    }, false, { 45, 52, 57, 60, 64 });
+}
+
 // -----------------------------------------------------------------------------
 int main (int argc, char** argv)
 {
@@ -456,6 +565,10 @@ int main (int argc, char** argv)
     testPresets();
     testRates();
     if (argc > 1) snapshots (juce::File (juce::String (argv[1])));
+    {
+        const auto capDir = juce::SystemStats::getEnvironmentVariable ("ROOMX_CAPTURAS", {});
+        if (capDir.isNotEmpty()) marketing (juce::File (capDir));
+    }
 
     lic::License::get().lock();       // não deixar a máquina de testes desbloqueada
 

@@ -17,6 +17,11 @@ static const KeyEntry kKeys[] =
     { "beta-1", Kind::Beta,
       "9633a8c62968c2fa5663687e00379063",
       "7d5422d5dd9075e6ad4a387f1d7fdbd97f3f187185739d8fd846c323f7295bf3", 2027, 1, 31 },
+
+    // promoção pública (loja, posts): válida até 01/11/2026
+    { "beta-promo", Kind::Beta,
+      "d6c8264268f860a8829e89038d4f7a82",
+      "8d8828ddd10f3209756597ff6a91ae4ad9218481888e5a071a66d1acb44d5ad9", 2026, 11, 1 },
 };
 
 int LocalPasswordLicenseProvider::numKeys() { return (int) std::size (kKeys); }
