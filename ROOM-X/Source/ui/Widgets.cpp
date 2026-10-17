@@ -28,7 +28,7 @@ Knob::Knob (APVTS& s, const juce::String& paramId, const juce::String& t, bool b
     valueLabel.setColour (juce::Label::textWhenEditingColourId, col::text);
     valueLabel.setColour (juce::Label::backgroundWhenEditingColourId, col::well);
     valueLabel.setColour (juce::Label::outlineWhenEditingColourId, col::lineHi);
-    valueLabel.setTooltip (U ("Duplo clique para escrever um valor"));
+    lang.bind ([this] { valueLabel.setTooltip (tr ("Duplo clique para escrever um valor", "Double-click to type a value")); });
     valueLabel.onTextChange = [this]
     {
         auto txt = valueLabel.getText().trim().retainCharacters ("0123456789.-+");
@@ -431,4 +431,69 @@ void SegmentedChoice::mouseExit (const juce::MouseEvent&)
     hover = -1;
     repaint();
 }
+// =============================================================================
+//  LanguageSwitch
+// =============================================================================
+LanguageSwitch::LanguageSwitch (const Accent* a) : accent (a)
+{
+    setMouseCursor (juce::MouseCursor::PointingHandCursor);
+    setTooltip (U ("Idioma da interface  ·  Interface language"));
+    piradex::i18n::addListener (this);
+}
+
+LanguageSwitch::~LanguageSwitch() { piradex::i18n::removeListener (this); }
+
+juce::Rectangle<float> LanguageSwitch::half (int i) const
+{
+    auto r = getLocalBounds().toFloat().reduced (1.0f);
+    return i == 0 ? r.removeFromLeft (r.getWidth() * 0.5f) : r.withTrimmedLeft (r.getWidth() * 0.5f);
+}
+
+void LanguageSwitch::paint (juce::Graphics& g)
+{
+    const auto b = getLocalBounds().toFloat().reduced (0.5f);
+    const float rad = b.getHeight() * 0.5f;
+    g.setColour (col::well);
+    g.fillRoundedRectangle (b, rad);
+    g.setColour (col::line);
+    g.drawRoundedRectangle (b, rad, 1.0f);
+
+    const int sel = (int) piradex::i18n::current();
+    const auto acc = accent != nullptr ? accent->current : col::all;
+    static const char* names[] = { "PT", "EN" };
+    for (int i = 0; i < 2; ++i)
+    {
+        auto r = half (i).reduced (2.0f);
+        if (i == sel)
+        {
+            g.setColour (acc.withAlpha (0.18f));
+            g.fillRoundedRectangle (r, r.getHeight() * 0.5f);
+            g.setColour (acc.withAlpha (0.85f));
+            g.drawRoundedRectangle (r.reduced (0.5f), r.getHeight() * 0.5f, 1.0f);
+        }
+        else if (i == hover)
+        {
+            g.setColour (col::panelHi);
+            g.fillRoundedRectangle (r, r.getHeight() * 0.5f);
+        }
+        g.setColour (i == sel ? col::text : col::textDim);
+        g.setFont (Fonts::caps (juce::jmin (13.0f, r.getHeight() * 0.52f), 0.10f));
+        g.drawText (names[i], r, juce::Justification::centred);
+    }
+}
+
+void LanguageSwitch::mouseDown (const juce::MouseEvent& e)
+{
+    for (int i = 0; i < 2; ++i)
+        if (half (i).contains (e.position))
+            piradex::i18n::set ((piradex::i18n::Language) i);
+}
+
+void LanguageSwitch::mouseMove (const juce::MouseEvent& e)
+{
+    const int h = half (0).contains (e.position) ? 0 : (half (1).contains (e.position) ? 1 : -1);
+    if (h != hover) { hover = h; repaint(); }
+}
+
+void LanguageSwitch::mouseExit (const juce::MouseEvent&) { hover = -1; repaint(); }
 } // namespace roomx::ui

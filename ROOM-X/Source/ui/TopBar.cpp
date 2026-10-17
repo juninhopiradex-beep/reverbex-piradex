@@ -4,6 +4,31 @@
 
 namespace roomx::ui
 {
+juce::String bankLabel (const juce::String& bank)
+{
+    if (piradex::i18n::current() == piradex::i18n::Language::EN) return bank;
+    static const char* map[][2] = { { "Drums", "Bateria" }, { "Instruments", "Instrumentos" }, { "MIDI Performance", "MIDI ao vivo" },
+                                    { "Mix FX", "Efeitos de mistura" }, { "Modal Chords", "Acordes modais" }, { "Sound Design", "Design de som" },
+                                    { "Synths", "Sintetizadores" }, { "Tutorial", "Tutorial" }, { "Vocals", "Vozes" }, { "User", "Utilizador" },
+                                    { "Sequenced Spaces", "Espaços sequenciados" } };
+    for (auto& m : map)
+    {
+        if (bank == m[0]) return U (m[1]);
+        if (bank.startsWith (juce::String (m[0]) + "/")) return U (m[1]) + bank.fromFirstOccurrenceOf ("/", true, false);
+    }
+    return bank;
+}
+
+static juce::String spaceCategoryLabel (int c, bool upper = false)
+{
+    static const char* names[][2] = { { "Salas", "Rooms" }, { "Auditórios", "Halls" }, { "Mecânicos", "Mechanical" },
+                                      { "Invulgares", "Unusual" }, { "Especiais", "Special FX" } };
+    static const char* caps[][2]  = { { "SALAS", "ROOMS" }, { "AUDITÓRIOS", "HALLS" }, { "MECÂNICOS", "MECHANICAL" },
+                                      { "INVULGARES", "UNUSUAL" }, { "ESPECIAIS", "SPECIAL FX" } };
+    c = juce::jlimit (0, 4, c);
+    return upper ? tr (caps[c][0], caps[c][1]) : tr (names[c][0], names[c][1]);
+}
+
 namespace P = roomx::params;
 
 // Marca ROOM-X: "ROOM" + X geométrico (dois traços cruzados, um no acento)
@@ -105,7 +130,7 @@ void TopBar::tick()
     redo.setEnabled (ctx.undo().canRedo());
     slotA.setToggleState (presets.activeSlot() == 0, juce::dontSendNotification);
     slotB.setToggleState (presets.activeSlot() == 1, juce::dontSendNotification);
-    copyAB.setTooltip (presets.activeSlot() == 0 ? U ("Copiar A para B") : U ("Copiar B para A"));
+    if (presets.activeSlot() == 0) copyAB.setTip ("Copiar A para B", "Copy A to B"); else copyAB.setTip ("Copiar B para A", "Copy B to A");
     tuning.showDot = std::abs (ParamRef (ctx.apvts, P::tuneRef).get() - 440.0f) > 0.05f
                   || std::abs (ParamRef (ctx.apvts, P::tuneCents).get()) > 0.05f;
     const bool d = presets.isDirty();
@@ -142,9 +167,9 @@ void TopBar::paint (juce::Graphics& g)
     {
         g.setColour (col::textFaint);
         g.setFont (Fonts::text (13.0f));
-        g.drawText (bank, t, juce::Justification::centredRight);
+        g.drawText (bankLabel (bank), t, juce::Justification::centredRight);
     }
-    IconButton::drawIcon (g, Icon::Menu, presetBox.removeFromRight (34.0f).reduced (8.0f), col::textDim);
+    IconButton::drawIcon (g, Icon::Menu, presetBox.withTrimmedLeft (presetBox.getWidth() - 34.0f).reduced (8.0f), col::textDim);
 }
 
 void TopBar::mouseDown (const juce::MouseEvent& e)
@@ -164,13 +189,13 @@ void TopBar::showPresetMenu()
         for (int i = 0; i < list.size(); ++i)
             if (list[i].bank == b)
                 sub.addItem (i + 1, list[i].name, true, i == presets.currentIndex());
-        root.addSubMenu (b, sub);
+        root.addSubMenu (bankLabel (b), sub);
     }
     root.addSeparator();
-    root.addItem (10001, U ("Guardar como…"));
-    root.addItem (10002, U ("Importar preset…"));
-    root.addItem (10003, U ("Abrir pasta de presets"));
-    root.addItem (10004, "Actualizar lista");
+    root.addItem (10001, tr ("Guardar como…", "Save as…"));
+    root.addItem (10002, tr ("Importar preset…", "Import preset…"));
+    root.addItem (10003, tr ("Abrir pasta de presets", "Open presets folder"));
+    root.addItem (10004, tr ("Actualizar lista", "Refresh list"));
     root.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea (localAreaToGlobal (presetBox.toNearestInt())).withMinimumWidth ((int) presetBox.getWidth()),
                         [this] (int r)
     {
@@ -179,7 +204,7 @@ void TopBar::showPresetMenu()
         if (r == 10001) saveAs();
         if (r == 10002)
         {
-            auto chooser = std::make_shared<juce::FileChooser> ("Importar preset ROOM-X", juce::File(), "*.roomx");
+            auto chooser = std::make_shared<juce::FileChooser> (tr ("Importar preset ROOM-X", "Import ROOM-X preset"), juce::File(), "*.roomx");
             chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this, chooser] (const juce::FileChooser& fc)
             {
                 if (fc.getResult().existsAsFile()) { presets.importFile (fc.getResult()); repaint(); }
@@ -195,16 +220,16 @@ void TopBar::showSaveMenu()
     const int idx = presets.currentIndex();
     const bool canOverwrite = juce::isPositiveAndBelow (idx, presets.entries().size()) && ! presets.entries()[idx].factory;
     juce::PopupMenu m;
-    m.addItem (1, "Guardar", canOverwrite);
-    m.addItem (2, U ("Guardar como…"));
-    m.addItem (3, U ("Importar preset…"));
+    m.addItem (1, tr ("Guardar", "Save"), canOverwrite);
+    m.addItem (2, tr ("Guardar como…", "Save as…"));
+    m.addItem (3, tr ("Importar preset…", "Import preset…"));
     m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (save), [this] (int r)
     {
         if (r == 1) { presets.saveCurrent(); repaint(); }
         if (r == 2) saveAs();
         if (r == 3)
         {
-            auto chooser = std::make_shared<juce::FileChooser> ("Importar preset ROOM-X", juce::File(), "*.roomx");
+            auto chooser = std::make_shared<juce::FileChooser> (tr ("Importar preset ROOM-X", "Import ROOM-X preset"), juce::File(), "*.roomx");
             chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this, chooser] (const juce::FileChooser& fc)
             {
                 if (fc.getResult().existsAsFile()) { presets.importFile (fc.getResult()); repaint(); }
@@ -215,10 +240,10 @@ void TopBar::showSaveMenu()
 
 void TopBar::saveAs()
 {
-    auto* w = new juce::AlertWindow (U ("Guardar preset"), U ("Nome do preset:"), juce::MessageBoxIconType::NoIcon, this);
+    auto* w = new juce::AlertWindow (tr ("Guardar preset", "Save preset"), tr ("Nome do preset:", "Preset name:"), juce::MessageBoxIconType::NoIcon, this);
     w->addTextEditor ("name", presets.currentName());
-    w->addButton ("Guardar", 1, juce::KeyPress (juce::KeyPress::returnKey));
-    w->addButton ("Cancelar", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+    w->addButton (tr ("Guardar", "Save"), 1, juce::KeyPress (juce::KeyPress::returnKey));
+    w->addButton (tr ("Cancelar", "Cancel"), 0, juce::KeyPress (juce::KeyPress::escapeKey));
     juce::Component::SafePointer<TopBar> safe (this);
     w->enterModalState (true, juce::ModalCallbackFunction::create ([safe, w] (int r)
     {
@@ -261,7 +286,7 @@ void SpaceSelector::paint (juce::Graphics& g)
     auto t = box.reduced (34.0f, 0.0f);
     g.setColour (col::textFaint);
     g.setFont (Fonts::caps (11.0f, 0.12f));
-    const juce::String cat = U (dsp::categoryName (s.category)).toUpperCase();
+    const juce::String cat = spaceCategoryLabel ((int) s.category, true);
     g.drawText (cat, t.removeFromLeft (92.0f), juce::Justification::centredLeft);
     const float rt = dsp::ReverbEngine::effectiveRt60 (idx, decay.get(), size.get() / 100.0f);
     g.setColour (col::textDim);
@@ -278,7 +303,7 @@ void SpaceSelector::mouseDown (const juce::MouseEvent&)
     const int cur = (int) space.get();
     for (int c = 0; c < 5; ++c)
     {
-        root.addSectionHeader (U (dsp::categoryName ((dsp::SpaceCategory) c)));
+        root.addSectionHeader (spaceCategoryLabel (c, true));
         for (int i = 0; i < dsp::kNumSpaces; ++i)
             if ((int) dsp::space (i).category == c)
             {

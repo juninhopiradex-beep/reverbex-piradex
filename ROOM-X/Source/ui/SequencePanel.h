@@ -33,10 +33,10 @@ private:
     state::SequenceModel& seq;
     ParamRef bars, grid, transposeP, offset, armed;
 
-    IconButton barsDown { Icon::Minus, U ("Menos compassos") }, barsUp { Icon::Plus, U ("Mais compassos") };
-    IconButton trDown { Icon::Minus, U ("Transpor -1") }, trUp { Icon::Plus, U ("Transpor +1") };
-    IconButton retrig { Icon::Retrigger, U ("Retrigger: recomeçar a sequência agora") };
-    IconButton arm { Icon::Play, U ("Seguir o transporte do DAW (armado)") };
+    IconButton barsDown { Icon::Minus, "Menos compassos", "Fewer bars" }, barsUp { Icon::Plus, "Mais compassos", "More bars" };
+    IconButton trDown { Icon::Minus, "Transpor -1", "Transpose -1" }, trUp { Icon::Plus, "Transpor +1", "Transpose +1" };
+    IconButton retrig { Icon::Retrigger, "Retrigger: recomeçar a sequência agora", "Retrigger: restart the sequence now" };
+    IconButton arm { Icon::Play, "Seguir o transporte do DAW (armado)", "Follow the DAW transport (armed)" };
     juce::TextButton gridBtn;
     std::unique_ptr<APVTS::ButtonAttachment> armAtt;
 

@@ -54,7 +54,6 @@ RoomXEditor::RoomXEditor (RoomXProcessor& p)
 
     // ---- comportamentos específicos
     target.colourForIndex = [] (int i) { return col::forTarget (i); };
-    target.caption = "TARGET";
     target.onChange = [this] (int) { accent.target = col::forTarget (target.getIndex()); };
 
     mix.setValueText ([this] (double v)
@@ -73,9 +72,9 @@ RoomXEditor::RoomXEditor (RoomXProcessor& p)
     notesLockAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment> (proc.apvts, P::notesLock, notesLock);
     for (auto* b : { &mixLock, &notesLock }) b->setIcon (b->getToggleState() ? Icon::Lock : Icon::Unlock);
 
-    preSync.setTooltip (U ("Pre-delay sincronizado com o andamento do DAW"));
-    killDry.setTooltip (U ("Remove o sinal seco (ideal em envio/aux)"));
-    dualMono.setTooltip (U ("Esquerda e direita como dois espaços mono independentes"));
+    piradex::i18n::reload();             // outro plugin Piradex pode ter mudado o idioma
+    lang.bind ([this] { applyLanguage(); });
+    lang.onChange = [this] { content.repaint(); };
     bypass.getProperties().set ("danger", true);
     preSync.onStateChange = [this] { updateVisibility(); };
     noteMode.onChange = [this] (int) { updateVisibility(); };
@@ -116,6 +115,31 @@ RoomXEditor::~RoomXEditor()
     if (&juce::LookAndFeel::getDefaultLookAndFeel() == &lnf)
         juce::LookAndFeel::setDefaultLookAndFeel (nullptr);
     setLookAndFeel (nullptr);
+}
+
+// Textos fixos dos controlos no idioma actual (os nomes de automação no DAW não mudam)
+void RoomXEditor::applyLanguage()
+{
+    inputFader.setTitle (tr ("ENTRADA", "INPUT"));
+    outputFader.setTitle (tr ("SAÍDA", "OUTPUT"));
+    const struct { Knob* k; const char* pt; const char* en; } knobs[] = {
+        { &preDelay, "PRÉ-ATRASO", "PRE-DELAY" }, { &preDiv, "PRÉ-ATRASO", "PRE-DELAY" }, { &mix, "MISTURA", "MIX" },
+        { &decay, "DECAIMENTO", "DECAY" }, { &size, "TAMANHO", "SIZE" }, { &position, "POSIÇÃO", "POSITION" },
+        { &density, "DENSIDADE", "DENSITY" }, { &offset, "DESVIO", "OFFSET" } };
+    for (auto& k : knobs) { k.k->title = tr (k.pt, k.en); k.k->repaint(); }
+
+    target.caption = tr ("ALVO", "TARGET");
+    target.setLabels ({ tr ("Inicial", "Early"), tr ("Tudo", "All"), tr ("Cauda", "Late") });
+    noteMode.setLabels ({ "Manual", tr ("Sequência", "Sequence"), "MIDI" });
+
+    preSync.setButtonText ("Sync");
+    killDry.setButtonText (tr ("Sem seco", "Kill Dry"));
+    dualMono.setButtonText (tr ("Mono duplo", "Dual Mono"));
+    bypass.setButtonText ("Bypass");
+    preSync.setTooltip (tr ("Pré-atraso sincronizado com o andamento do DAW", "Pre-delay synced to the DAW tempo"));
+    killDry.setTooltip (tr ("Remove o sinal seco (ideal em envio/aux)", "Removes the dry signal (ideal on a send/aux)"));
+    dualMono.setTooltip (tr ("Esquerda e direita como dois espaços mono independentes", "Left and right as two independent mono spaces"));
+    bypass.setTooltip (tr ("Ignorar o efeito (sem cliques)", "Bypass the effect (click-free)"));
 }
 
 void RoomXEditor::showCallout (std::unique_ptr<juce::Component> c, juce::Component& anchor)
@@ -233,8 +257,8 @@ void RoomXEditor::Content::paint (juce::Graphics& g)
     // separador e títulos da zona de notas
     g.setColour (col::textFaint);
     g.setFont (Fonts::caps (12.5f, 0.14f));
-    g.drawText ("NOTE SELECTION", e.tabsRow.withRight (e.notesLock.getX() - 12), juce::Justification::centredRight);
-    g.drawText (e.ctx.noteMode() == 1 ? U ("SEGUE O TRANSPORTE DO DAW") : (e.ctx.noteMode() == 2 ? U ("TOQUE NOTAS OU ACORDES") : U ("ESCOLHA AS NOTAS")),
+    g.drawText (tr ("SELECÇÃO DE NOTAS", "NOTE SELECTION"), e.tabsRow.withRight (e.notesLock.getX() - 12), juce::Justification::centredRight);
+    g.drawText (e.ctx.noteMode() == 1 ? tr ("SEGUE O TRANSPORTE DO DAW", "FOLLOWS THE DAW TRANSPORT") : (e.ctx.noteMode() == 2 ? tr ("TOQUE NOTAS OU ACORDES", "PLAY NOTES OR CHORDS") : tr ("ESCOLHA AS NOTAS", "PICK THE NOTES")),
                 e.tabsRow.withLeft (e.noteMode.getRight() + 12), juce::Justification::centredLeft);
 
     // rodapé

@@ -199,12 +199,12 @@ juce::String SpectrumView::describe (Drag d) const
     };
     switch (d)
     {
-        case Drag::RangeLow:  return U ("Tempero Range (grave): ") + noteTxt (rangeLow.get());
-        case Drag::RangeHigh: return U ("Tempero Range (agudo): ") + noteTxt (rangeHigh.get());
-        case Drag::RangeBoth: return U ("Tempero Range: ") + music::noteName (juce::roundToInt (rangeLow.get()), flats) + " – "
+        case Drag::RangeLow:  return tr ("Gama do Tempero (grave): ", "Tempero Range (low): ") + noteTxt (rangeLow.get());
+        case Drag::RangeHigh: return tr ("Gama do Tempero (agudo): ", "Tempero Range (high): ") + noteTxt (rangeHigh.get());
+        case Drag::RangeBoth: return tr ("Gama do Tempero: ", "Tempero Range: ") + music::noteName (juce::roundToInt (rangeLow.get()), flats) + " – "
                                    + music::noteName (juce::roundToInt (rangeHigh.get()), flats);
-        case Drag::LowCut:    return "Low Cut: " + P::formatHz (lowCut.get());
-        case Drag::HighCut:   return "High Cut: " + P::formatHz (highCut.get());
+        case Drag::LowCut:    return tr ("Corte de graves: ", "Low Cut: ") + P::formatHz (lowCut.get());
+        case Drag::HighCut:   return tr ("Corte de agudos: ", "High Cut: ") + P::formatHz (highCut.get());
         case Drag::CutBoth:   return "Wet: " + P::formatHz (lowCut.get()) + U (" – ") + P::formatHz (highCut.get());
         case Drag::None:      break;
     }

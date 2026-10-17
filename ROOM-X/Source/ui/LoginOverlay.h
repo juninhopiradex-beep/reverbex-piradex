@@ -9,7 +9,7 @@
 
 namespace roomx::ui
 {
-class LoginOverlay : public juce::Component, private juce::Timer
+class LoginOverlay : public juce::Component, private juce::Timer, private piradex::i18n::Listener
 {
 public:
     explicit LoginOverlay (Accent& a);
@@ -24,8 +24,9 @@ public:
 private:
     Accent& accent;
     juce::TextEditor password;
-    juce::ToggleButton remember { U ("Lembrar este computador") };
-    juce::TextButton enter { "Entrar" };
+    juce::ToggleButton remember;
+    juce::TextButton enter;
+    LanguageSwitch language { &accent };
     juce::Label message;
     std::shared_ptr<std::atomic<bool>> alive = std::make_shared<std::atomic<bool>> (true);
     bool busy = false;
@@ -33,5 +34,6 @@ private:
     juce::Rectangle<int> card() const;
     void submit();
     void timerCallback() override;
+    void languageChanged() override;
 };
 } // namespace roomx::ui

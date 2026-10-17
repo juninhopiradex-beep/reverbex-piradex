@@ -8,17 +8,76 @@ namespace roomx::ui
 namespace P = roomx::params;
 using namespace roomx::music;
 
+// Nomes PT (os acordes ficam em cifra internacional nos dois idiomas)
+namespace
+{
+    struct PtName { const char* shortPt; const char* longPt; };
+    const PtName kIntervalsPt[] = {
+        { "Uníssono", "Uníssono (só a fundamental)" }, { "2m", "2ª menor" }, { "2M", "2ª maior" }, { "3m", "3ª menor" },
+        { "3M", "3ª maior" }, { "4P", "4ª perfeita" }, { "Trítono", "Trítono" }, { "5P", "5ª perfeita" },
+        { "6m", "6ª menor" }, { "6M", "6ª maior" }, { "7m", "7ª menor" }, { "7M", "7ª maior" } };
+    const PtName kChordsPt[] = {
+        { nullptr, "Tríade maior" }, { nullptr, "Tríade menor" }, { nullptr, "Tríade diminuta" }, { nullptr, "Tríade aumentada" },
+        { nullptr, "2ª suspensa" }, { nullptr, "4ª suspensa" }, { nullptr, "Power chord (fundamental + 5ª)" }, { nullptr, "6ª maior" },
+        { nullptr, "6ª menor" }, { nullptr, "7ª maior" }, { nullptr, "7ª menor" }, { nullptr, "7ª dominante" },
+        { nullptr, "7ª diminuta" }, { nullptr, "Meio-diminuto" }, { nullptr, "Menor com 7ª maior" }, { nullptr, "7 dominante sus4" },
+        { nullptr, "Maior add 9" }, { nullptr, "Menor add 9" }, { nullptr, "9ª maior" }, { nullptr, "9ª menor" },
+        { nullptr, "9ª dominante" }, { nullptr, "11ª menor" }, { nullptr, "13ª dominante" }, { nullptr, "7 dominante #9" },
+        { nullptr, "4ªs sobrepostas" } };
+    const PtName kScalesPt[] = {
+        { "Maior", "Maior" }, { "Menor nat", "Menor natural" }, { "Menor harm", "Menor harmónica" }, { "Menor mel", "Menor melódica" },
+        { "Penta maior", "Pentatónica maior" }, { "Penta menor", "Pentatónica menor" }, { "Blues", "Blues menor" }, { "Blues maior", "Blues maior" },
+        { "Tons inteiros", "Tons inteiros" }, { "Cromática", "Cromática (12 notas)" }, { "Dim MT", "Diminuta meio-tom/tom" }, { "Dim TM", "Diminuta tom/meio-tom" },
+        { "Aumentada", "Aumentada (hexatónica)" }, { "Bebop dom", "Bebop dominante" }, { "Menor húngara", "Menor húngara" }, { "Dupla harm", "Dupla harmónica" },
+        { "Hijaz", "Hijaz / frígia dominante" }, { "Hirajoshi", "Hirajoshi" }, { "In Sen", "In Sen" }, { "Egípcia", "Egípcia (pentatónica suspensa)" },
+        { "Prometeu", "Prometeu" }, { "Menor napol", "Menor napolitana" }, { "Persa", "Persa" }, { "Enigmática", "Enigmática" } };
+    const PtName kModesPt[] = {
+        { "Jónio", "Jónio (I)" }, { "Dórico", "Dórico (II)" }, { "Frígio", "Frígio (III)" }, { "Lídio", "Lídio (IV)" },
+        { "Mixolídio", "Mixolídio (V)" }, { "Eólio", "Eólio (VI)" }, { "Lócrio", "Lócrio (VII)" }, { "Lídio dom", "Lídio dominante" },
+        { "Lídio aum", "Lídio aumentado" }, { "Mixo b6", "Mixolídio b6" }, { "Dórico b2", "Dórico b2" }, { "Lócrio #2", "Lócrio #2" },
+        { "Alterado", "Alterado (super-lócrio)" } };
+
+    const PtName* ptName (Category c, int i)
+    {
+        auto pick = [i] (const PtName* t, int n) -> const PtName* { return juce::isPositiveAndBelow (i, n) ? t + i : nullptr; };
+        switch (c)
+        {
+            case Category::Interval: return pick (kIntervalsPt, (int) std::size (kIntervalsPt));
+            case Category::Chord:    return pick (kChordsPt, (int) std::size (kChordsPt));
+            case Category::Scale:    return pick (kScalesPt, (int) std::size (kScalesPt));
+            case Category::Mode:     return pick (kModesPt, (int) std::size (kModesPt));
+        }
+        return nullptr;
+    }
+}
+
+juce::String harmonyLabel (const Harmony& h, bool flats)
+{
+    if (piradex::i18n::isPortuguese())
+        if (auto* n = ptName (h.category, h.typeIndex); n != nullptr && n->shortPt != nullptr)
+            return juce::String (pitchName (h.root, flats)) + " " + U (n->shortPt);
+    return juce::String::fromUTF8 (h.label (flats).c_str());
+}
+
+juce::String harmonyLongName (Category c, int index)
+{
+    if (piradex::i18n::isPortuguese())
+        if (auto* n = ptName (c, index); n != nullptr)
+            return U (n->longPt);
+    return juce::String::fromUTF8 (type (c, index).longName);
+}
+
 juce::String describeMask (uint16_t mask, bool flats)
 {
     mask &= kAllPitchClasses;
-    if (mask == 0) return U ("Nenhuma nota");
-    if (mask == kAllPitchClasses) return U ("Cromática (todas)");
+    if (mask == 0) return tr ("Nenhuma nota", "No notes");
+    if (mask == kAllPitchClasses) return tr ("Cromática (todas)", "Chromatic (all)");
     for (auto cat : { Category::Chord, Category::Scale, Category::Mode, Category::Interval })
         for (int root = 0; root < 12; ++root)
             for (int i = 0; i < numTypes (cat); ++i)
             {
                 Harmony h { root, cat, i };
-                if (h.mask() == mask) return juce::String::fromUTF8 (h.label (flats).c_str());
+                if (h.mask() == mask) return harmonyLabel (h, flats);
             }
     juce::StringArray names;
     for (int pc = 0; pc < 12; ++pc)
@@ -126,7 +185,7 @@ void NotePads::mouseUp (const juce::MouseEvent&)
 // =============================================================================
 //  ScaleBrowser
 // =============================================================================
-static const char* kCatNamesPt[] = { "Intervalos", "Acordes", "Escalas", "Modos" };
+static const char* kCatNames[][2] = { { "Intervalos", "Intervals" }, { "Acordes", "Chords" }, { "Escalas", "Scales" }, { "Modos", "Modes" } };
 
 ScaleBrowser::ScaleBrowser (Context& c, std::function<void (const Harmony&)> onPick, Harmony initial)
     : ctx (c), pick (std::move (onPick)), h (initial)
@@ -171,10 +230,10 @@ void ScaleBrowser::paint (juce::Graphics& g)
     const bool flats = ctx.useFlats();
     g.setColour (col::text);
     g.setFont (Fonts::caps (14.0f));
-    g.drawText (U ("ESCOLHER ESCALA / ACORDE"), getLocalBounds().reduced (14).removeFromTop (22), juce::Justification::centredLeft);
+    g.drawText (tr ("ESCOLHER ESCALA / ACORDE", "CHOOSE SCALE / CHORD"), getLocalBounds().reduced (14).removeFromTop (22), juce::Justification::centredLeft);
     g.setColour (col::textDim);
     g.setFont (Fonts::text (13.5f));
-    g.drawText (U ("Aplica-se logo · as notas podem ser editadas depois"), getLocalBounds().reduced (14).removeFromTop (22), juce::Justification::centredRight);
+    g.drawText (tr ("Aplica-se logo · as notas podem ser editadas depois", "Applies instantly · notes can be edited afterwards"), getLocalBounds().reduced (14).removeFromTop (22), juce::Justification::centredRight);
 
     for (int i = 0; i < kNumCategories; ++i)
     {
@@ -186,7 +245,7 @@ void ScaleBrowser::paint (juce::Graphics& g)
         g.drawRoundedRectangle (r.reduced (0.5f), 6.0f, 1.0f);
         g.setColour (on ? col::text : col::textDim);
         g.setFont (Fonts::label (15.0f));
-        g.drawText (U (kCatNamesPt[i]), r.reduced (12.0f, 0.0f), juce::Justification::centredLeft);
+        g.drawText (tr (kCatNames[i][0], kCatNames[i][1]), r.reduced (12.0f, 0.0f), juce::Justification::centredLeft);
     }
 
     for (int i = 0; i < 12; ++i)
@@ -217,7 +276,7 @@ void ScaleBrowser::paint (juce::Graphics& g)
         const auto& t = type (h.category, i);
         g.setColour (on ? col::text : col::text.withAlpha (0.85f));
         g.setFont (Fonts::label (14.5f));
-        g.drawText (juce::String::fromUTF8 (t.longName), r.reduced (10.0f, 0.0f), juce::Justification::centredLeft);
+        g.drawText (harmonyLongName (h.category, i), r.reduced (10.0f, 0.0f), juce::Justification::centredLeft);
         // mini-mapa das 12 notas
         const uint16_t m = rotatePitchMask (t.mask, h.root);
         for (int pc = 0; pc < 12; ++pc)
@@ -283,6 +342,14 @@ ManualPanel::ManualPanel (Context& c) : ctx (c), notes (c.apvts, P::notes), pads
         addAndMakeVisible (b);
     }
     for (auto* b : { &down, &up }) { b->accent = &c.accent; addAndMakeVisible (b); }
+    lang.bind ([this]
+    {
+        choose.setButtonText (tr ("Escolher escala…", "Choose scale…"));
+        clear.setButtonText (tr ("Limpar", "Clear"));
+        all.setButtonText (tr ("Todas", "All"));
+        invert.setButtonText (tr ("Inverter", "Invert"));
+    });
+    lang.onChange = [this] { repaint(); };
 
     choose.onClick = [this]
     {
@@ -336,12 +403,12 @@ void ManualPanel::paint (juce::Graphics& g)
     auto right = r.removeFromRight (190);
     g.setColour (col::textDim);
     g.setFont (Fonts::caps (13.0f, 0.08f));
-    g.drawText ("TRANSPOSE", right.withSizeKeepingCentre (180, 36).translated (0, -6).removeFromLeft (84), juce::Justification::centredLeft);
+    g.drawText (tr ("TRANSPOR", "TRANSPOSE"), right.withSizeKeepingCentre (180, 36).translated (0, -6).removeFromLeft (84), juce::Justification::centredLeft);
 
     auto left = r.removeFromLeft (190);
     g.setColour (col::textFaint);
     g.setFont (Fonts::caps (12.0f, 0.1f));
-    g.drawText (U ("SELECÇÃO ACTUAL"), left.withSizeKeepingCentre (176, 18).translated (0, -32), juce::Justification::centred);
+    g.drawText (tr ("SELECÇÃO ACTUAL", "CURRENT SELECTION"), left.withSizeKeepingCentre (176, 18).translated (0, -32), juce::Justification::centred);
     g.setColour (col::text);
     g.setFont (Fonts::label (15.5f));
     g.drawFittedText (describeMask ((uint16_t) (int) notes.get(), ctx.useFlats()), left.withSizeKeepingCentre (186, 22).translated (0, -12),
@@ -349,7 +416,7 @@ void ManualPanel::paint (juce::Graphics& g)
 
     g.setColour (col::textFaint);
     g.setFont (Fonts::text (12.5f));
-    g.drawText (U ("Clique ou arraste para pintar notas · também no círculo"), pads.getBounds().withY (pads.getBottom() + 2).withHeight (18),
+    g.drawText (tr ("Clique ou arraste para pintar notas · também no círculo", "Click or drag to paint notes · also on the circle"), pads.getBounds().withY (pads.getBottom() + 2).withHeight (18),
                 juce::Justification::centred);
 }
 
@@ -359,7 +426,15 @@ void ManualPanel::paint (juce::Graphics& g)
 MidiPanel::MidiPanel (Context& c)
     : ctx (c), octave (c.apvts, P::midiOctave, "Octave Repeat"), release (c.apvts, P::midiRelease, "RELEASE")
 {
-    octave.setTooltip (U ("Ligado: cada nota tocada repete-se nas oitavas acima\nDesligado: só o registo exacto que tocou"));
+    lang.bind ([this]
+    {
+        octave.setButtonText (tr ("Repetir oitavas", "Octave Repeat"));
+        octave.setTooltip (tr ("Ligado: cada nota tocada repete-se nas oitavas acima\nDesligado: só o registo exacto que tocou",
+                               "On: every played note repeats in the octaves above\nOff: only the exact register you played"));
+        release.title = tr ("LIBERTAÇÃO", "RELEASE");
+        release.repaint();
+    });
+    lang.onChange = [this] { repaint(); };
     addAndMakeVisible (octave);
     addAndMakeVisible (release);
 }
@@ -390,7 +465,7 @@ void MidiPanel::paint (juce::Graphics& g)
         auto r = ledArea;
         g.setColour (col::textDim);
         g.setFont (Fonts::caps (13.0f, 0.08f));
-        g.drawText (U ("ENTRADA MIDI"), r.removeFromTop (18.0f), juce::Justification::centred);
+        g.drawText (tr ("ENTRADA MIDI", "MIDI INPUT"), r.removeFromTop (18.0f), juce::Justification::centred);
         auto meter = r.withSizeKeepingCentre (120.0f, 8.0f).translated (0, 4);
         g.setColour (col::well);
         g.fillRoundedRectangle (meter, 4.0f);
@@ -398,7 +473,7 @@ void MidiPanel::paint (juce::Graphics& g)
         g.fillRoundedRectangle (meter.withWidth (meter.getWidth() * juce::jmax (0.04f, led)), 4.0f);
         g.setColour (col::textFaint);
         g.setFont (Fonts::text (12.5f));
-        g.drawText (U ("Todos os canais · Sustain CC64"), ledArea.translated (0, 40).withHeight (18), juce::Justification::centred);
+        g.drawText (tr ("Todos os canais · Sustain CC64", "All channels · Sustain CC64"), ledArea.translated (0, 40).withHeight (18), juce::Justification::centred);
     }
 
     // teclado C1..C8 com as notas que estão a "temperar"
@@ -453,6 +528,13 @@ TuningPanel::TuningPanel (Context& c)
     addAndMakeVisible (ref);
     addAndMakeVisible (cents);
     for (auto* b : { &reset, &sharps, &flats }) { b->getProperties().set ("fontSize", 14.0); addAndMakeVisible (b); }
+    lang.bind ([this]
+    {
+        reset.setButtonText (tr ("Repor 440 Hz", "Reset to 440 Hz"));
+        cents.title = tr ("FINO", "FINE");
+        cents.repaint();
+    });
+    lang.onChange = [this] { repaint(); };
     reset.onClick = [this]
     {
         ParamRef (ctx.apvts, P::tuneRef).setOnce (440.0f);
@@ -486,10 +568,10 @@ void TuningPanel::paint (juce::Graphics& g)
 {
     g.setColour (col::text);
     g.setFont (Fonts::caps (14.0f));
-    g.drawText (U ("AFINAÇÃO GLOBAL"), getLocalBounds().reduced (14).removeFromTop (20), juce::Justification::centredLeft);
+    g.drawText (tr ("AFINAÇÃO GLOBAL", "GLOBAL TUNING"), getLocalBounds().reduced (14).removeFromTop (20), juce::Justification::centredLeft);
     g.setColour (col::textFaint);
     g.setFont (Fonts::text (12.5f));
-    g.drawText (U ("Guardada por instância"), getLocalBounds().reduced (14).removeFromBottom (18), juce::Justification::centredLeft);
+    g.drawText (tr ("Guardada por instância", "Saved per instance"), getLocalBounds().reduced (14).removeFromBottom (18), juce::Justification::centredLeft);
 }
 
 // =============================================================================
@@ -497,7 +579,7 @@ void TuningPanel::paint (juce::Graphics& g)
 // =============================================================================
 InfoPanel::InfoPanel (Context& c, std::function<void()> onLogout) : ctx (c), logout (std::move (onLogout))
 {
-    setSize (430, 330);
+    setSize (430, 372);
     logoutBtn.getProperties().set ("danger", true);
     logoutBtn.getProperties().set ("fontSize", 14.0);
     logoutBtn.onClick = [this] { if (logout) logout(); };
@@ -509,6 +591,13 @@ InfoPanel::InfoPanel (Context& c, std::function<void()> onLogout) : ctx (c), log
         ctx.apvts.state.setProperty ("analyzerOn", ctx.analyzer.enabled, nullptr);
     };
     addAndMakeVisible (analyzer);
+    addAndMakeVisible (language);
+    lang.bind ([this]
+    {
+        logoutBtn.setButtonText (tr ("Terminar sessão neste computador", "Sign out on this computer"));
+        analyzer.setButtonText (tr ("Analisador de espectro ligado", "Spectrum analyzer on"));
+    });
+    lang.onChange = [this] { repaint(); };
 }
 
 void InfoPanel::resized()
@@ -517,6 +606,9 @@ void InfoPanel::resized()
     logoutBtn.setBounds (r.removeFromBottom (32));
     r.removeFromBottom (8);
     analyzer.setBounds (r.removeFromBottom (26));
+    r.removeFromBottom (8);
+    languageRow = r.removeFromBottom (32);
+    language.setBounds (languageRow.withTrimmedLeft (languageRow.getWidth() - 112).reduced (0, 2));
 }
 
 void InfoPanel::paint (juce::Graphics& g)
@@ -533,16 +625,32 @@ void InfoPanel::paint (juce::Graphics& g)
     const auto status = lic::License::get().statusText();
     g.setColour (lic::License::get().kind() == lic::Kind::Beta ? col::warn : col::textDim);
     g.setFont (Fonts::label (14.0f));
-    g.drawText (status.isNotEmpty() ? status : U ("Sem sessão"), r.removeFromTop (20), juce::Justification::centredLeft);
+    g.drawText (status.isNotEmpty() ? status : tr ("Sem sessão", "Not signed in"), r.removeFromTop (20), juce::Justification::centredLeft);
     r.removeFromTop (8);
 
     g.setColour (col::textDim);
     g.setFont (Fonts::text (13.5f));
-    g.drawFittedText (U ("Reverb modal musical: escolhe notas, acordes, escalas, uma sequência ou toca MIDI, "
-                         "e o TEMPERO realça (+) ou escava (−) essas ressonâncias no espaço. "
-                         "TARGET decide se actua nas reflexões (Early), na cauda (Late) ou em tudo.\n\n"
-                         "Duplo clique repõe qualquer controlo · Shift + arrastar = ajuste fino.\n"
-                         "Suporte: juninhopiradex@hotmail.com  ·  www.beatfreakstudio.com/loja"),
+    g.drawFittedText (tr ("Reverb modal musical: escolhe notas, acordes, escalas, uma sequência ou toca MIDI, "
+                          "e o TEMPERO realça (+) ou escava (−) essas ressonâncias no espaço. "
+                          "O ALVO decide se actua nas reflexões (Inicial), na cauda (Cauda) ou em tudo.\n\n"
+                          "Duplo clique repõe qualquer controlo · Shift + arrastar = ajuste fino.\n"
+                          "Suporte: juninhopiradex@hotmail.com  ·  www.beatfreakstudio.com/loja",
+                          "Musical modal reverb: pick notes, chords, scales, a sequence or play MIDI, "
+                          "and TEMPERO boosts (+) or carves (−) those resonances in the space. "
+                          "TARGET decides whether it acts on the reflections (Early), the tail (Late) or everything.\n\n"
+                          "Double-click resets any control · Shift + drag = fine adjust.\n"
+                          "Support: juninhopiradex@hotmail.com  ·  www.beatfreakstudio.com/loja"),
                       r.removeFromTop (140), juce::Justification::topLeft, 9);
+
+    // linha do idioma (o rótulo é bilingue para quem estiver "perdido" no outro idioma)
+    g.setColour (col::line);
+    g.fillRect (languageRow.getX(), languageRow.getY() - 4, languageRow.getWidth(), 1);
+    g.setColour (col::text);
+    g.setFont (Fonts::label (14.5f));
+    g.drawText (tr ("Idioma", "Language"), languageRow.withTrimmedRight (120), juce::Justification::centredLeft);
+    g.setColour (col::textFaint);
+    g.setFont (Fonts::text (12.5f));
+    g.drawText (tr ("Language · todos os plugins Piradex", "Idioma · all Piradex plugins"),
+                languageRow.withTrimmedRight (120).withTrimmedLeft (72), juce::Justification::centredLeft);
 }
 } // namespace roomx::ui

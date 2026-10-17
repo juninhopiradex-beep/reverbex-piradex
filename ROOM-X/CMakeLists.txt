@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(RoomXByPiradex VERSION 1.0.0)
+project(RoomXByPiradex VERSION 2.0.0)
 
 # -----------------------------------------------------------------------------
 #  ROOM-X by Piradex — reverb modal musical (AU + VST3 macOS, VST3 Windows)
@@ -76,6 +76,7 @@ set(ROOMX_SOURCES
     Source/state/FactoryPresets.cpp
     Source/state/SequenceModel.cpp
     Source/licensing/License.cpp
+    Source/i18n/PiradexLanguage.cpp
     Source/ui/LookAndFeel.cpp
     Source/ui/Widgets.cpp
     Source/ui/NoteScape.cpp

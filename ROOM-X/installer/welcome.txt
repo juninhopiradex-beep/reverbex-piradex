@@ -1,4 +1,4 @@
-ROOM-X by Piradex 1.0.0
+ROOM-X by Piradex 2.0.0
 
 Reverb modal musical: a sala ressoa nas notas, acordes, escalas, sequências ou MIDI que escolher.
 

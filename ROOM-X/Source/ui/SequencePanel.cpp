@@ -7,6 +7,13 @@ namespace roomx::ui
 namespace P = roomx::params;
 using namespace roomx::music;
 
+static juce::String gridLabel (const juce::String& n)
+{
+    if (n == "Bar")  return tr ("Compasso", "Bar");
+    if (n == "Beat") return tr ("Tempo", "Beat");
+    return n;
+}
+
 SequencePanel::SequencePanel (Context& c, state::SequenceModel& model)
     : ctx (c), seq (model),
       bars (c.apvts, P::seqBars), grid (c.apvts, P::seqGrid), transposeP (c.apvts, P::seqTranspose),
@@ -32,7 +39,7 @@ SequencePanel::SequencePanel (Context& c, state::SequenceModel& model)
         juce::PopupMenu m;
         const auto& divs = P::gridDivisions();
         for (int i = 0; i < divs.size(); ++i)
-            m.addItem (i + 1, divs[i].name, true, (int) grid.get() == i);
+            m.addItem (i + 1, gridLabel (divs[i].name), true, (int) grid.get() == i);
         m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (gridBtn), [this] (int r)
         {
             if (r > 0) grid.setOnce ((float) (r - 1));
@@ -184,7 +191,7 @@ void SequencePanel::tick()
 {
     reload();
     const auto& divs = P::gridDivisions();
-    const juce::String gname = divs[juce::jlimit (0, divs.size() - 1, (int) grid.get())].name;
+    const juce::String gname = gridLabel (divs[juce::jlimit (0, divs.size() - 1, (int) grid.get())].name);
     if (gridBtn.getButtonText() != gname) gridBtn.setButtonText (gname);
     if (viewLen > totalBeats() + 1e-9 || viewStart + viewLen > totalBeats() + 1e-9) clampView();
 
@@ -229,7 +236,7 @@ void SequencePanel::paint (juce::Graphics& g)
         }
         g.setColour (active ? col::text : col::textDim);
         g.setFont (Fonts::label (juce::jmin (14.0f, h * 0.82f)));
-        g.drawText (juce::String::fromUTF8 (seq.getRow (r).label (flats).c_str()), lr.withTrimmedLeft (17.0f), juce::Justification::centredLeft);
+        g.drawText (harmonyLabel (seq.getRow (r), flats), lr.withTrimmedLeft (17.0f), juce::Justification::centredLeft);
     }
 
     // ---- grelha
@@ -276,7 +283,7 @@ void SequencePanel::paint (juce::Graphics& g)
         {
             g.setColour (col::bg.withAlpha (0.85f));
             g.setFont (Fonts::label (juce::jmin (13.0f, rr.getHeight() * 0.85f)));
-            g.drawText (juce::String::fromUTF8 (seq.getRow (rg.row).label (flats).c_str()), rr.reduced (6.0f, 0.0f), juce::Justification::centredLeft);
+            g.drawText (harmonyLabel (seq.getRow (rg.row), flats), rr.reduced (6.0f, 0.0f), juce::Justification::centredLeft);
         }
     }
 
@@ -338,7 +345,7 @@ void SequencePanel::paint (juce::Graphics& g)
     auto s = side.reduced (10.0f, 4.0f);
     g.setColour (col::text);
     g.setFont (Fonts::caps (13.0f));
-    g.drawText ("TIMING", s.removeFromTop (22.0f), juce::Justification::centredLeft);
+    g.drawText (tr ("TEMPO", "TIMING"), s.removeFromTop (22.0f), juce::Justification::centredLeft);
     const float rowH = (s.getHeight() - 36.0f) / 4.0f;
     auto drawRow = [&] (const juce::String& name, const juce::String& value, bool withButtons)
     {
@@ -353,11 +360,11 @@ void SequencePanel::paint (juce::Graphics& g)
             g.drawText (value, row.removeFromRight (104.0f).reduced (26.0f, 0.0f), juce::Justification::centred);
         }
     };
-    drawRow ("Bars (4/4)", juce::String ((int) bars.get()), true);
-    drawRow ("Grid", {}, false);
-    drawRow ("Offset", {}, false);
-    const int tr = (int) transposeP.get();
-    drawRow ("Transpose", (tr > 0 ? "+" : "") + juce::String (tr), true);
+    drawRow (tr ("Compassos (4/4)", "Bars (4/4)"), juce::String ((int) bars.get()), true);
+    drawRow (tr ("Grelha", "Grid"), {}, false);
+    drawRow (tr ("Desvio", "Offset"), {}, false);
+    const int tp = (int) transposeP.get();
+    drawRow (tr ("Transpor", "Transpose"), (tp > 0 ? "+" : "") + juce::String (tp), true);
 
     g.setColour (mode == Mode::Offset ? col::panelHi.brighter (0.08f) : col::panelHi);
     g.fillRoundedRectangle (offsetBox, 6.0f);
@@ -369,7 +376,7 @@ void SequencePanel::paint (juce::Graphics& g)
 
     g.setColour (col::textFaint);
     g.setFont (Fonts::text (12.0f));
-    g.drawText (armed.get() > 0.5f ? U ("Segue o DAW") : U ("Desarmado: usa a linha seleccionada"),
+    g.drawText (armed.get() > 0.5f ? tr ("Segue o DAW", "Follows the DAW") : tr ("Desarmado: usa a linha seleccionada", "Disarmed: uses the selected row"),
                 s.withTrimmedTop (4.0f).withTrimmedRight (82.0f), juce::Justification::centredLeft);
 }
 
@@ -392,11 +399,11 @@ void SequencePanel::showRegionMenu (int index)
     juce::PopupMenu m;
     if (index >= 0)
     {
-        m.addItem (1, "Duplicar a seguir");
-        m.addItem (2, "Apagar");
+        m.addItem (1, tr ("Duplicar a seguir", "Duplicate after"));
+        m.addItem (2, tr ("Apagar", "Delete"));
         m.addSeparator();
     }
-    m.addItem (3, U ("Limpar a sequência"));
+    m.addItem (3, tr ("Limpar a sequência", "Clear sequence"));
     m.showMenuAsync ({}, [this, index] (int r)
     {
         ctx.undo().beginNewTransaction ("Sequence edit");

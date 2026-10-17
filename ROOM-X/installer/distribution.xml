@@ -16,5 +16,5 @@
     <choice id="com.piradex.roomx.plugins" visible="false">
         <pkg-ref id="com.piradex.roomx.plugins"/>
     </choice>
-    <pkg-ref id="com.piradex.roomx.plugins" version="1.0.0" onConclusion="none">roomx-plugins.pkg</pkg-ref>
+    <pkg-ref id="com.piradex.roomx.plugins" version="2.0.0" onConclusion="none">roomx-plugins.pkg</pkg-ref>
 </installer-gui-script>

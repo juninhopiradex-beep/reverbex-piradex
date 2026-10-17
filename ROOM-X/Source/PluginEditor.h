@@ -28,6 +28,7 @@ public:
     void mouseDown (const juce::MouseEvent&) override;
 
     static constexpr int kBaseW = 1180, kBaseH = 800;
+    roomx::ui::Context& uiContext() noexcept { return ctx; }   // testes / capturas
 
 private:
     RoomXProcessor& proc;
@@ -57,7 +58,7 @@ private:
     roomx::ui::Knob size     { proc.apvts, roomx::params::size, "SIZE" };
     roomx::ui::ParamToggle preSync { proc.apvts, roomx::params::preDelaySync, "Sync" };
     roomx::ui::ParamToggle killDry { proc.apvts, roomx::params::killDry, "Kill Dry" };
-    roomx::ui::IconButton mixLock { roomx::ui::Icon::Unlock, roomx::ui::U ("Mix Lock: manter o Mix ao trocar de preset") };
+    roomx::ui::IconButton mixLock { roomx::ui::Icon::Unlock, "Bloquear Mistura: manter a Mistura ao trocar de preset", "Mix Lock: keep the Mix when changing presets" };
 
     // ---- centro
     roomx::ui::NoteScape noteScape { ctx };
@@ -73,7 +74,7 @@ private:
     // ---- espectro + selecção de notas
     roomx::ui::SpectrumView spectrum { ctx };
     roomx::ui::SegmentedChoice noteMode { proc.apvts, roomx::params::noteMode, { "Manual", "Sequence", "MIDI" } };
-    roomx::ui::IconButton notesLock { roomx::ui::Icon::Unlock, roomx::ui::U ("Note Lock: manter as notas/sequência ao trocar de preset") };
+    roomx::ui::IconButton notesLock { roomx::ui::Icon::Unlock, "Bloquear Notas: manter as notas/sequência ao trocar de preset", "Note Lock: keep the notes/sequence when changing presets" };
     roomx::ui::ManualPanel manualPanel { ctx };
     roomx::ui::SequencePanel sequencePanel { ctx, proc.sequence };
     roomx::ui::MidiPanel midiPanel { ctx };
@@ -82,6 +83,7 @@ private:
     roomx::ui::ParamToggle bypass { proc.apvts, roomx::params::bypass, "Bypass" };
 
     roomx::ui::LoginOverlay login { accent };
+    roomx::ui::LanguageBinder lang;      // idioma PT/EN (troca imediata)
 
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> mixLockAtt, notesLockAtt;
     juce::Rectangle<int> leftPanel, rightPanel, lowerPanel, footer, tabsRow;
@@ -93,6 +95,7 @@ private:
     void updateVisibility();
     void showCallout (std::unique_ptr<juce::Component> c, juce::Component& anchor);
     void logout();
+    void applyLanguage();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RoomXEditor)
 };

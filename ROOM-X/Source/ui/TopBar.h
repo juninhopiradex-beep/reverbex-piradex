@@ -9,6 +9,7 @@
 
 namespace roomx::ui
 {
+juce::String bankLabel (const juce::String& bank);   // nome do banco no idioma actual
 void drawRoomXLogo (juce::Graphics&, juce::Rectangle<float> area, juce::Colour accent, float height, bool withByline);
 
 class TopBar : public juce::Component
@@ -21,18 +22,18 @@ public:
     void tick();
 
     std::function<void()> onInfo, onTuning;
-    IconButton tuning { Icon::Fork, U ("Afinação global (A4 / cents / sustenidos-bemóis)") };
+    IconButton tuning { Icon::Fork, "Afinação global (A4 / cents / sustenidos-bemóis)", "Global tuning (A4 / cents / sharps-flats)" };
 
 private:
     Context& ctx;
     state::PresetManager& presets;
-    IconButton undo { Icon::Undo, U ("Desfazer (Ctrl/Cmd+Z)") }, redo { Icon::Redo, U ("Refazer (Ctrl/Cmd+Shift+Z)") };
-    IconButton prev { Icon::Prev, "Preset anterior" }, next { Icon::Next, U ("Próximo preset") };
-    IconButton save { Icon::Save, U ("Guardar / importar presets") };
-    IconButton info { Icon::Info, U ("Informação, licença e definições") };
-    IconButton eco  { Icon::Leaf, U ("Modo Eco: menos CPU (cauda de 8 linhas, analisador mais lento)") };
+    IconButton undo { Icon::Undo, "Desfazer (Ctrl/Cmd+Z)", "Undo (Ctrl/Cmd+Z)" }, redo { Icon::Redo, "Refazer (Ctrl/Cmd+Shift+Z)", "Redo (Ctrl/Cmd+Shift+Z)" };
+    IconButton prev { Icon::Prev, "Preset anterior", "Previous preset" }, next { Icon::Next, "Próximo preset", "Next preset" };
+    IconButton save { Icon::Save, "Guardar / importar presets", "Save / import presets" };
+    IconButton info { Icon::Info, "Informação, licença e definições (idioma)", "Info, license and settings (language)" };
+    IconButton eco  { Icon::Leaf, "Modo Eco: menos CPU (cauda de 8 linhas, analisador mais lento)", "Eco mode: less CPU (8-line tail, slower analyzer)" };
     juce::TextButton slotA { "A" }, slotB { "B" };
-    IconButton copyAB { Icon::Copy, U ("Copiar A para B (ou B para A)") };
+    IconButton copyAB { Icon::Copy, "Copiar A para B (ou B para A)", "Copy A to B (or B to A)" };
     std::unique_ptr<APVTS::ButtonAttachment> ecoAtt;
     juce::Rectangle<float> presetBox, logoArea;
     bool dirty = false;
@@ -57,7 +58,7 @@ public:
 private:
     Context& ctx;
     ParamRef space, decay, size;
-    IconButton prev { Icon::Prev, "Espaço anterior" }, next { Icon::Next, U ("Próximo espaço") };
+    IconButton prev { Icon::Prev, "Espaço anterior", "Previous space" }, next { Icon::Next, "Próximo espaço", "Next space" };
     bool hot = false;
     juce::Rectangle<float> box;
 };

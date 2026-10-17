@@ -1,6 +1,6 @@
 # ROOM-X by Piradex
 
-Reverb modal musical para **macOS (AU + VST3, Universal 2: Intel + Apple Silicon, 10.13+)** e **Windows 10/11 (VST3 x64)**. JUCE 8 / C++17.
+Reverb modal musical para **macOS (AU + VST3 + AAX, Universal 2: Intel + Apple Silicon, 10.13+)** e **Windows 10/11 (VST3 + AAX x64)**. Interface em **Português e Inglês**. JUCE 8 / C++17. Versão **2.0.0**.
 
 Uma reverb de estúdio premium cujo campo ressonante se afina por **notas, acordes, escalas, sequências harmónicas ou MIDI ao vivo**. O **Tempero** realça (+) ou escava (−) essas ressonâncias; o **Target** decide se actua nas reflexões iniciais (**EARLY**, coral), em tudo (**ALL**, teal) ou na cauda (**LATE**, azul eléctrico) — e o acento da interface muda de cor com ele.
 
@@ -16,6 +16,7 @@ Uma reverb de estúdio premium cujo campo ressonante se afina por **notas, acord
 - Selecção de notas: **Manual** (12 teclas, pintar por arrasto, Escolher escala: 12 intervalos, 25 acordes, 24 escalas, 13 modos; Transpose; Limpar/Todas/Inverter), **Sequence** (8 linhas, 1–64 compassos, grelha 1/1…1/16 + tercinas, session offset, transpose, retrigger, arm/seguir DAW, criar/mover/redimensionar/duplicar regiões, zoom e navegador) e **MIDI** (todos os canais, sustain CC64, Octave Repeat, release ajustável, medidor de actividade).
 - **29 espaços originais** em 5 categorias · **60 presets de fábrica + 11 tutoriais** · presets do utilizador (.roomx), importar, A/B com cópia nos dois sentidos, Undo/Redo, Note Lock, Mix Lock, modo **Eco**, afinação global (A4 400–500 Hz, ±50 cents, sustenidos/bemóis).
 - Interface escalável 70–150 %.
+- **Idioma PT | EN** em *Info › Idioma* (e no ecrã de senha): troca imediata; primeira abertura segue o idioma do sistema; escolha comum a todos os plugins Piradex. Os nomes de automação no DAW ficam fixos.
 
 ## Acesso por senha
 Ao abrir o plugin aparece o ecrã de login (mesmo modelo dos outros plugins Piradex):
@@ -37,7 +38,7 @@ O GitHub Actions (`.github/workflows/roomx.yml`) compila tudo a cada push que me
 - testes DSP + testes do plugin (com capturas da interface),
 - **macOS**: AU + VST3 Universal 2, verificação `lipo` e macOS mínimo 10.13, `auval` (Apple Silicon e Intel/Rosetta), pluginval, `.pkg` + `.dmg`,
 - **Windows**: VST3 x64 sem dependência do VC++ Redistributable, pluginval, instalador Inno Setup + `.zip`,
-- publica um pré-lançamento `roomx-v1.0.0-beta` com o `.dmg`, o `Setup.exe` e o `.zip`.
+- publica a versão `roomx-v2.0.0` com o `.dmg`, o `Setup.exe`, o `.zip` e os `.zip` AAX.
 
 Localmente:
 ```
@@ -56,8 +57,8 @@ O AAX é compilado no GitHub Actions para macOS (Universal 2) e Windows x64 — 
 O Pro Tools normal só carrega plugins AAX **assinados pela PACE** (`wraptool`, conta PACE/iLok). Sem essas credenciais, o CI publica `...-AAX-nao-assinado.zip`, que só abre no *Pro Tools Developer*. Para assinar automaticamente, adiciona nos *Secrets* do repositório: `PACE_ACCOUNT`, `PACE_PASSWORD`, `PACE_WCGUID`, `PACE_EDEN_URL` (instalador Mac das ferramentas Eden) e, para Windows, `PACE_EDEN_WIN_URL`, `PACE_KEYFILE_B64`, `PACE_KEYPASSWORD`. A partir daí sai `...-AAX-assinado.zip`.
 
 ## Instalação
-- **macOS**: abrir o `.dmg` → `ROOM-X by Piradex 1.0.0.pkg` (VST3 em `/Library/Audio/Plug-Ins/VST3`, AU em `/Library/Audio/Plug-Ins/Components`). No Logic, para o modo MIDI carregue-o como *MIDI-controlled Effect*.
-- **Windows**: `ROOM-X-by-Piradex-1.0.0-Windows-Setup.exe` instala em `C:\Program Files\Common Files\VST3`. Sem assinatura digital paga, o Windows pode mostrar "O Windows protegeu o seu PC": **Mais informações → Executar mesmo assim**.
+- **macOS**: abrir o `.dmg` → `ROOM-X by Piradex 2.0.0.pkg` (VST3 em `/Library/Audio/Plug-Ins/VST3`, AU em `/Library/Audio/Plug-Ins/Components`). No Logic, para o modo MIDI carregue-o como *MIDI-controlled Effect*.
+- **Windows**: `ROOM-X-by-Piradex-2.0.0-Windows-Setup.exe` instala em `C:\Program Files\Common Files\VST3`. Sem assinatura digital paga, o Windows pode mostrar "O Windows protegeu o seu PC": **Mais informações → Executar mesmo assim**.
 - Presets do utilizador: `~/Music/Piradex/ROOM-X/User Presets` (Mac) · `Documentos\Piradex\ROOM-X\User Presets` (Windows).
 
 ## Estrutura
@@ -71,6 +72,7 @@ ROOM-X/
     music/                  MusicTheory (escalas/acordes/afinação), SequenceEngine, MidiNoteState
     state/                  Parameters (IDs imutáveis), PresetManager (A/B, .roomx), FactoryPresets, SequenceModel
     licensing/              License (ILicenseProvider, PBKDF2, token ligado à máquina)
+    i18n/                   PiradexLanguage — idioma PT/EN partilhado por todos os plugins Piradex
     ui/                     Theme, LookAndFeel, Widgets, NoteScape, SpectrumView, Panels, SequencePanel, TopBar, LoginOverlay
   assets/fonts/             Barlow (SIL OFL 1.1)
   tests/                    test_dsp.cpp (sem JUCE), test_plugin.cpp (integração)

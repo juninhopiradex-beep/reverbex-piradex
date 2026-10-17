@@ -9,7 +9,6 @@ LoginOverlay::LoginOverlay (Accent& a) : accent (a)
     password.setPasswordCharacter ((juce::juce_wchar) 0x2022);
     password.setFont (Fonts::label (19.0f));
     password.setJustification (juce::Justification::centred);
-    password.setTextToShowWhenEmpty ("Senha", col::textFaint);
     password.setColour (juce::TextEditor::outlineColourId, col::line);
     password.setColour (juce::TextEditor::focusedOutlineColourId, col::all);
     password.setColour (juce::TextEditor::backgroundColourId, col::well);
@@ -27,10 +26,24 @@ LoginOverlay::LoginOverlay (Accent& a) : accent (a)
     message.setJustificationType (juce::Justification::centred);
     message.setFont (Fonts::text (14.0f));
     addAndMakeVisible (message);
+    addAndMakeVisible (language);
+    piradex::i18n::addListener (this);
+    languageChanged();
+}
+
+void LoginOverlay::languageChanged()
+{
+    password.setTextToShowWhenEmpty (tr ("Senha", "Password"), col::textFaint);
+    remember.setButtonText (tr ("Lembrar este computador", "Remember this computer"));
+    enter.setButtonText (tr ("Entrar", "Sign in"));
+    message.setText ({}, juce::dontSendNotification);
+    password.repaint();
+    repaint();
 }
 
 LoginOverlay::~LoginOverlay()
 {
+    piradex::i18n::removeListener (this);
     alive->store (false);
     stopTimer();
 }
@@ -60,7 +73,7 @@ void LoginOverlay::paint (juce::Graphics& g)
     t.removeFromTop (8.0f);
     g.setColour (col::textDim);
     g.setFont (Fonts::text (14.5f));
-    g.drawText (U ("Introduza a sua senha para começar"), t.removeFromTop (24.0f), juce::Justification::centred);
+    g.drawText (tr ("Introduza a sua senha para começar", "Enter your password to get started"), t.removeFromTop (24.0f), juce::Justification::centred);
 }
 
 void LoginOverlay::resized()
@@ -74,6 +87,7 @@ void LoginOverlay::resized()
     enter.setBounds (c.removeFromTop (40).withSizeKeepingCentre (170, 40));
     c.removeFromTop (8);
     message.setBounds (c.removeFromTop (40));
+    language.setBounds (card().removeFromBottom (44).removeFromRight (96).reduced (14, 10));
 }
 
 void LoginOverlay::visibilityChanged()
@@ -86,7 +100,7 @@ void LoginOverlay::timerCallback()
 {
     int secs = 0;
     if (! lic::License::canAttempt (secs))
-        message.setText (U ("Demasiadas tentativas. Tente de novo dentro de ") + juce::String (secs) + " s.", juce::dontSendNotification);
+        message.setText (tr ("Demasiadas tentativas. Tente de novo dentro de ", "Too many attempts. Try again in ") + juce::String (secs) + " s.", juce::dontSendNotification);
     else
     {
         stopTimer();
@@ -104,7 +118,7 @@ void LoginOverlay::submit()
     busy = true;
     enter.setEnabled (false);
     message.setColour (juce::Label::textColourId, col::textDim);
-    message.setText (U ("A verificar…"), juce::dontSendNotification);
+    message.setText (tr ("A verificar…", "Checking…"), juce::dontSendNotification);
 
     const auto pw = password.getText();
     const bool rem = remember.getToggleState();
@@ -134,7 +148,7 @@ void LoginOverlay::submit()
             lic::License::registerFailure();
             self.password.selectAll();
             self.message.setColour (juce::Label::textColourId, col::danger);
-            self.message.setText (r == lic::Result::Expired ? U ("Esta senha BETA já expirou.") : U ("Senha incorrecta."),
+            self.message.setText (r == lic::Result::Expired ? tr ("Esta senha BETA já expirou.", "This BETA password has expired.") : tr ("Senha incorrecta.", "Incorrect password."),
                                   juce::dontSendNotification);
             int s = 0;
             if (! lic::License::canAttempt (s)) { self.enter.setEnabled (false); self.startTimer (500); }

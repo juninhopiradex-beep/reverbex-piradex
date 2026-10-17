@@ -18,6 +18,7 @@ class TemperDial : public juce::Component, public juce::SettableTooltipClient
 {
 public:
     explicit TemperDial (Context& c);
+    juce::String getTooltip() override;
     void paint (juce::Graphics&) override;
     void mouseDown (const juce::MouseEvent&) override;
     void mouseDrag (const juce::MouseEvent&) override;

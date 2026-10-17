@@ -8,6 +8,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "BinaryData.h"
+#include "../i18n/PiradexLanguage.h"
 
 namespace roomx::ui
 {
@@ -80,4 +81,5 @@ struct Fonts
 };
 
 inline juce::String U (const char* utf8) { return juce::String::fromUTF8 (utf8); }
+using piradex::i18n::tr;   // tr ("texto PT", "English text")
 } // namespace roomx::ui

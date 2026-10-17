@@ -16,8 +16,14 @@ static juce::Point<float> polar (juce::Point<float> c, float r, float a) { retur
 TemperDial::TemperDial (Context& c)
     : ctx (c), temper (c.apvts, P::temper), width (c.apvts, P::noteWidth)
 {
-    setTooltip (U ("Centro: arrastar = Tempero  ·  Anel exterior: arrastar = Note Width\n"
-                   "Roda do rato = Tempero (Shift = Note Width)  ·  Duplo clique = repor"));
+}
+
+juce::String TemperDial::getTooltip()
+{
+    return tr ("Centro: arrastar = Tempero  ·  Anel exterior: arrastar = Largura\n"
+               "Roda do rato = Tempero (Shift = Largura)  ·  Duplo clique = repor",
+               "Centre: drag = Tempero  ·  Outer ring: drag = Note Width\n"
+               "Mouse wheel = Tempero (Shift = Note Width)  ·  Double-click = reset");
 }
 
 bool TemperDial::hitTest (int x, int y)
@@ -102,22 +108,22 @@ void TemperDial::paint (juce::Graphics& g)
 
     // ---- textos
     const bool hotT = hover == Zone::Temper || zone == Zone::Temper;
-    auto tr = disc.reduced (dr * 0.12f);
+    auto tb = disc.reduced (dr * 0.12f);
     g.setColour (hotT ? col::text : col::textDim);
     g.setFont (Fonts::caps (dr * 0.175f, 0.12f));
-    g.drawText ("TEMPERO", tr.removeFromTop (tr.getHeight() * 0.27f), juce::Justification::centredBottom);
+    g.drawText ("TEMPERO", tb.removeFromTop (tb.getHeight() * 0.27f), juce::Justification::centredBottom);
     const int tv = juce::roundToInt (temper.get());
     g.setColour (col::text);
     g.setFont (Fonts::title (dr * 0.50f));
-    g.drawText ((tv > 0 ? "+" : "") + juce::String (tv), tr.removeFromTop (tr.getHeight() * 0.44f), juce::Justification::centred);
+    g.drawText ((tv > 0 ? "+" : "") + juce::String (tv), tb.removeFromTop (tb.getHeight() * 0.44f), juce::Justification::centred);
     g.setColour (col::lineHi);
-    g.fillRect (juce::Rectangle<float> (dr * 0.9f, 1.0f).withCentre ({ c.x, tr.getY() + 1.0f }));
+    g.fillRect (juce::Rectangle<float> (dr * 0.9f, 1.0f).withCentre ({ c.x, tb.getY() + 1.0f }));
     g.setColour (hover == Zone::Width || zone == Zone::Width ? col::text : col::textDim);
     g.setFont (Fonts::caps (dr * 0.14f, 0.08f));
-    g.drawText ("NOTE WIDTH", tr.removeFromTop (tr.getHeight() * 0.40f), juce::Justification::centredBottom);
+    g.drawText (tr ("LARGURA", "NOTE WIDTH"), tb.removeFromTop (tb.getHeight() * 0.40f), juce::Justification::centredBottom);
     g.setColour (col::text);
     g.setFont (Fonts::label (dr * 0.24f));
-    g.drawText (juce::String (juce::roundToInt (width.get())) + "%", tr, juce::Justification::centredTop);
+    g.drawText (juce::String (juce::roundToInt (width.get())) + "%", tb, juce::Justification::centredTop);
 }
 
 void TemperDial::mouseDown (const juce::MouseEvent& e)

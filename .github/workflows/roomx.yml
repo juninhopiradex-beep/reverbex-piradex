@@ -13,7 +13,7 @@ defaults:
     working-directory: ROOM-X
 
 env:
-  VERSAO: "1.0.0"
+  VERSAO: "2.0.0"
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -269,13 +269,13 @@ jobs:
           path: dist
           merge-multiple: true
 
-      - name: Publicar pré-lançamento (macOS + Windows)
+      - name: Publicar versão (macOS + Windows)
         run: |
           ls -laR dist
-          TAG="roomx-v$VERSAO-beta"
+          TAG="roomx-v$VERSAO"
           gh release delete "$TAG" -y --cleanup-tag -R "$GITHUB_REPOSITORY" || true
           FICHEIROS=$(find dist -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.zip' \))
           echo "$FICHEIROS"
           gh release create "$TAG" $FICHEIROS -R "$GITHUB_REPOSITORY" \
-            --prerelease --target "$GITHUB_SHA" --title "ROOM-X by Piradex $VERSAO (beta)" \
-            --notes "macOS (10.13+, Intel e Apple Silicon, AU + VST3): ROOM-X-by-Piradex-$VERSAO-macOS.dmg · Windows 10/11 64 bits (VST3): ROOM-X-by-Piradex-$VERSAO-Windows-Setup.exe (ou o .zip para instalação manual) · AAX (Pro Tools): ficheiros *-AAX-*.zip, ver LEIA-ME-AAX.txt."
+            --target "$GITHUB_SHA" --title "ROOM-X by Piradex $VERSAO" \
+            --notes "Interface em Português e Inglês (Info › Idioma). macOS (10.13+, Intel e Apple Silicon, AU + VST3): ROOM-X-by-Piradex-$VERSAO-macOS.dmg · Windows 10/11 64 bits (VST3): ROOM-X-by-Piradex-$VERSAO-Windows-Setup.exe (ou o .zip para instalação manual) · AAX (Pro Tools): ficheiros *-AAX-*.zip, ver LEIA-ME-AAX.txt."

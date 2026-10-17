@@ -556,6 +556,151 @@ static void marketing (const juce::File& dir)
 }
 
 // -----------------------------------------------------------------------------
+//  Idioma PT/EN: tr(), troca imediata, persistência no ficheiro Piradex
+// -----------------------------------------------------------------------------
+static void testLanguage()
+{
+    std::printf ("[idioma PT/EN]\n");
+    namespace L = piradex::i18n;
+    const auto before = L::current();
+    L::set (L::Language::PT, false);
+    check (L::tr ("Guardar", "Save") == "Guardar", "tr devolve PT");
+    check (L::tr ("Afinação", "Tuning") == juce::String::fromUTF8 ("Afinação"), "tr PT em UTF-8");
+    L::set (L::Language::EN, false);
+    check (L::tr ("Guardar", "Save") == "Save", "tr devolve EN");
+
+    struct Count : L::Listener { int n = 0; void languageChanged() override { ++n; } } count;
+    L::addListener (&count);
+    L::set (L::Language::PT, false);
+    L::set (L::Language::PT, false);
+    check (count.n == 1, "aviso de troca só quando muda");
+    L::removeListener (&count);
+
+    // persistência (ficheiro comum a todos os plugins Piradex)
+    L::set (L::Language::EN, true);
+    L::set (L::Language::PT, false);
+    L::reload();
+    check (L::current() == L::Language::EN, "idioma guardado e relido do ficheiro Piradex");
+
+    // o editor troca na hora e os nomes de automação não mudam
+    RoomXProcessor p;
+    p.prepareToPlay (48000.0, 512);
+    const auto nameBefore = p.apvts.getParameter (P::decay)->getName (64);
+    {
+        std::unique_ptr<juce::AudioProcessorEditor> ed (p.createEditor());
+        L::set (L::Language::PT, false);
+        pump (50);
+        L::set (L::Language::EN, false);
+        pump (50);
+    }
+    check (p.apvts.getParameter (P::decay)->getName (64) == nameBefore, "nomes de automação fixos");
+    L::set (before, true);
+}
+
+// -----------------------------------------------------------------------------
+//  Capturas PT / EN a 2× (ROOMX_CAPTURAS_IDIOMA=pasta) — mesmo editor, troca
+//  de idioma em directo entre as duas fotos.
+// -----------------------------------------------------------------------------
+static void languageShots (const juce::File& dir)
+{
+    namespace L = piradex::i18n;
+    std::printf ("[capturas PT/EN a 2x] -> %s\n", dir.getFullPathName().toRawUTF8());
+    dir.createDirectory();
+    const auto before = L::current();
+    auto save = [&] (const juce::Image& img, const juce::String& file)
+    {
+        auto f = dir.getChildFile (file);
+        f.deleteFile();
+        juce::FileOutputStream os (f);
+        juce::PNGImageFormat().writeImageToStream (img, os);
+        std::printf ("    %s (%dx%d)\n", file.toRawUTF8(), img.getWidth(), img.getHeight());
+    };
+
+    auto run = [&] (const char* presetName, const char* tag, std::function<void (RoomXProcessor&)> tweak, bool play,
+                    std::vector<int> chord, bool panels)
+    {
+        RoomXProcessor p;
+        FakePlayHead head;
+        p.setPlayHead (&head);
+        p.prepareToPlay (48000.0, 512);
+        for (int i = 0; i < p.presets->entries().size(); ++i)
+            if (p.presets->entries()[i].name == presetName) p.presets->load (i);
+        if (tweak) tweak (p);
+        MusicSignal sig;
+        sig.notes = std::move (chord);
+        head.playing = play;
+        juce::MidiBuffer midi;
+        juce::AudioBuffer<float> buf (2, 512);
+        L::set (L::Language::PT, false);
+        std::unique_ptr<juce::AudioProcessorEditor> ed (p.createEditor());
+        ed->setSize (RoomXEditor::kBaseW, RoomXEditor::kBaseH);
+        auto feed = [&] (int blocks)
+        {
+            for (int k = 0; k < blocks; ++k)
+            {
+                for (int i = 0; i < 512; ++i) { buf.setSample (0, i, sig.sample (0)); buf.setSample (1, i, sig.sample (1)); }
+                p.processBlock (buf, midi);
+                head.ppq += 512.0 / 48000.0 * 2.0;
+                if (k % 3 == 0) pump (10);
+            }
+        };
+        feed (600);
+        for (auto lang : { L::Language::PT, L::Language::EN })
+        {
+            L::set (lang, false);          // troca em directo no mesmo editor
+            feed (30);
+            pump (400);
+            const juce::String suf = lang == L::Language::PT ? "pt" : "en";
+            save (ed->createComponentSnapshot (ed->getLocalBounds(), true, 2.0f), juce::String (tag) + "-" + suf + "@2x.png");
+            // janela flutuante sobre fundo opaco (como aparece na CallOutBox)
+            auto panelShot = [] (juce::Component& c)
+            {
+                juce::Image img (juce::Image::ARGB, c.getWidth() * 2, c.getHeight() * 2, true);
+                juce::Graphics g (img);
+                g.fillAll (juce::Colour (0xff14171d));   // col::panel
+                g.addTransform (juce::AffineTransform::scale (2.0f));
+                c.paintEntireComponent (g, true);
+                return img;
+            };
+            if (panels)
+            {
+                auto& ctx = static_cast<RoomXEditor*> (ed.get())->uiContext();
+                roomx::ui::InfoPanel info (ctx, {});
+                info.setLookAndFeel (&ed->getLookAndFeel());
+                save (panelShot (info), "info-" + suf + "@2x.png");
+                roomx::ui::TuningPanel tun (ctx);
+                tun.setLookAndFeel (&ed->getLookAndFeel());
+                save (panelShot (tun), "afinacao-" + suf + "@2x.png");
+                roomx::ui::ScaleBrowser sb (ctx, [] (const roomx::music::Harmony&) {}, roomx::music::Harmony { 2, roomx::music::Category::Mode, 1 });
+                sb.setLookAndFeel (&ed->getLookAndFeel());
+                save (panelShot (sb), "escalas-" + suf + "@2x.png");
+                info.setLookAndFeel (nullptr); tun.setLookAndFeel (nullptr); sb.setLookAndFeel (nullptr);
+            }
+        }
+        ed.reset();
+        p.setPlayHead (nullptr);
+    };
+
+#if defined (ROOMX_ALLOW_TEST_UNLOCK)
+    // ecrã de login nas duas línguas
+    lic::License::get().lock();
+    run ("Major 7 Hall", "login", nullptr, false, { 53, 57, 60, 64 }, false);
+    static_cast<lic::LocalPasswordLicenseProvider&> (lic::License::get()).unlockForTests();
+#endif
+    run ("Major 7 Hall", "principal", [] (RoomXProcessor& pr) { setParam (pr, P::noteMode, 0.0f); }, false, { 53, 57, 60, 64 }, true);
+    run ("Pop Progression Hall", "sequence", nullptr, true, { 48, 52, 55, 60 }, false);
+    run ("MIDI Chord Follower", "midi", [] (RoomXProcessor& pr)
+    {
+        juce::MidiBuffer m;
+        for (int n : { 45, 52, 57, 60, 64 }) m.addEvent (juce::MidiMessage::noteOn (1, n, (juce::uint8) 100), 0);
+        juce::AudioBuffer<float> b (2, 512);
+        b.clear();
+        pr.processBlock (b, m);
+    }, false, { 45, 52, 57, 60, 64 }, false);
+    L::set (before, false);
+}
+
+// -----------------------------------------------------------------------------
 int main (int argc, char** argv)
 {
     juce::ScopedJuceInitialiser_GUI gui;
@@ -564,10 +709,13 @@ int main (int argc, char** argv)
     testState();
     testPresets();
     testRates();
+    testLanguage();
     if (argc > 1) snapshots (juce::File (juce::String (argv[1])));
     {
         const auto capDir = juce::SystemStats::getEnvironmentVariable ("ROOMX_CAPTURAS", {});
         if (capDir.isNotEmpty()) marketing (juce::File (capDir));
+        const auto langDir = juce::SystemStats::getEnvironmentVariable ("ROOMX_CAPTURAS_IDIOMA", {});
+        if (langDir.isNotEmpty()) languageShots (juce::File (langDir));
     }
 
     lic::License::get().lock();       // não deixar a máquina de testes desbloqueada

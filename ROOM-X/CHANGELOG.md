@@ -1,5 +1,10 @@
 # Changelog — ROOM-X by Piradex
 
+## 2.0.0 — 2026-10-17
+- Interface em **Português e Inglês**: seletor PT | EN em *Info › Idioma* e no ecrã de senha; troca imediata, sem reabrir o plugin. Na primeira abertura segue o idioma do sistema. A escolha é comum a todos os plugins Piradex (`Piradex.settings`). Os nomes de automação no DAW não mudam — sessões antigas abrem iguais.
+- Formato **AAX** (Pro Tools) para macOS e Windows.
+- Corrigido: a caixa do nome do preset encolhia a cada redesenho do topo.
+
 ## 1.0.0 (beta) — 2026-10-17
 - Formato AAX (Pro Tools) para macOS e Windows; assinatura PACE automática quando houver credenciais nos segredos do repositório.
 - Controlo Temper passa a chamar-se Tempero.

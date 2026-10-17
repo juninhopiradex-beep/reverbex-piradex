@@ -10,6 +10,9 @@ namespace roomx::ui
 {
 // Nome da harmonia que corresponde exactamente a uma máscara (ex.: "A min", "D Dorian")
 juce::String describeMask (uint16_t mask, bool flats);
+// Etiqueta / nome longo de uma harmonia no idioma actual (acordes ficam em cifra)
+juce::String harmonyLabel (const music::Harmony& h, bool flats);
+juce::String harmonyLongName (music::Category c, int index);
 
 // ---------------------------------------------------------------------------
 class NotePads : public juce::Component
@@ -70,8 +73,9 @@ private:
     Context& ctx;
     ParamRef notes;
     NotePads pads;
-    juce::TextButton choose { U ("Escolher escala…") }, clear { "Limpar" }, all { "Todas" }, invert { "Inverter" };
-    IconButton down { Icon::Minus, U ("Transpor -1 semitom") }, up { Icon::Plus, U ("Transpor +1 semitom") };
+    juce::TextButton choose, clear, all, invert;
+    IconButton down { Icon::Minus, "Transpor -1 semitom", "Transpose -1 semitone" }, up { Icon::Plus, "Transpor +1 semitom", "Transpose +1 semitone" };
+    LanguageBinder lang;
     music::Harmony lastPicked { 0, music::Category::Scale, 0 };
     void transpose (int semis);
 };
@@ -89,6 +93,7 @@ private:
     Context& ctx;
     ParamToggle octave;
     Knob release;
+    LanguageBinder lang;
     int lastActivity = 0;
     float led = 0.0f;
     juce::Rectangle<float> keysArea, ledArea;
@@ -105,7 +110,8 @@ public:
 private:
     Context& ctx;
     Knob ref, cents;
-    juce::TextButton reset { U ("Repor 440 Hz") }, sharps { "C# D# F#" }, flats { "Db Eb Gb" };
+    juce::TextButton reset, sharps { "C# D# F#" }, flats { "Db Eb Gb" };
+    LanguageBinder lang;
 };
 
 // ---------------------------------------------------------------------------
@@ -119,7 +125,10 @@ public:
 private:
     Context& ctx;
     std::function<void()> logout;
-    juce::TextButton logoutBtn { U ("Terminar sessão neste computador") };
-    juce::ToggleButton analyzer { U ("Analisador de espectro ligado") };
+    juce::TextButton logoutBtn;
+    juce::ToggleButton analyzer;
+    LanguageSwitch language { &ctx.accent };
+    LanguageBinder lang;
+    juce::Rectangle<int> languageRow;
 };
 } // namespace roomx::ui

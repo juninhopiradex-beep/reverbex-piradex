@@ -1,4 +1,5 @@
 #include "License.h"
+#include "../i18n/PiradexLanguage.h"
 #include <cstring>
 #include <iterator>
 
@@ -200,8 +201,8 @@ void LocalPasswordLicenseProvider::checkExpiry()
 juce::String LocalPasswordLicenseProvider::statusText() const
 {
     if (! unlocked.load() || currentKey == nullptr) return {};
-    if (currentKind == Kind::Master) return juce::String::fromUTF8 ("Licença completa");
-    return juce::String::fromUTF8 ("BETA · válida até ")
+    if (currentKind == Kind::Master) return piradex::i18n::tr ("Licença completa", "Full license");
+    return piradex::i18n::tr ("BETA · válida até ", "BETA · valid until ")
          + juce::String (currentKey->expDay).paddedLeft ('0', 2) + "/"
          + juce::String (currentKey->expMonth).paddedLeft ('0', 2) + "/" + juce::String (currentKey->expYear);
 }

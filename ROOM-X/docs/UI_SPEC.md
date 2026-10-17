@@ -12,6 +12,10 @@ Base lógica **1180 × 800** px, escalável 70–150 % com proporção fixa (a e
 | Painel inferior | 598–768 | Manual (teclas + escala + transpose) · Sequence (linhas, grelha, navegador, timing) · MIDI (actividade, teclado, Octave Repeat, Release) |
 | Rodapé | 772–800 | Versão, estado da licença (BETA a laranja), Eco/afinação alterada, Bypass |
 
+## Idioma (PT / EN)
+- Seletor PT | EN em *Info › Idioma* e no canto do ecrã de senha. Troca imediata (todas as janelas abertas). Primeira abertura: idioma do sistema. Guardado em `Piradex.settings` (comum a todos os plugins Piradex).
+- Todos os textos passam por `tr ("pt", "en")` (`Source/i18n/PiradexLanguage.h`). Os nomes dos parâmetros vistos pelo DAW não mudam.
+
 ## Cor
 - Fundo `#0C0E12`, painéis `#14171D`, linhas `#262B35`, texto `#E6E9EF`, notas seleccionadas prata `#F4F6FA`.
 - Acento por Target, transição ~200 ms (interpolação a 30 Hz): **EARLY `#FF667A`**, **ALL `#40E0C0`**, **LATE `#3DA8FF`**.
