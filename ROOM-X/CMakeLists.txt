@@ -28,9 +28,9 @@ else()
 endif()
 
 if(APPLE)
-    set(ROOMX_FORMATS VST3 AU)
+    set(ROOMX_FORMATS VST3 AU AAX)
 elseif(WIN32)
-    set(ROOMX_FORMATS VST3)
+    set(ROOMX_FORMATS VST3 AAX)
 else()
     set(ROOMX_FORMATS VST3 Standalone)   # Linux: só para desenvolvimento/testes
 endif()
@@ -53,7 +53,8 @@ juce_add_plugin(RoomX
     EDITOR_WANTS_KEYBOARD_FOCUS TRUE
     COPY_PLUGIN_AFTER_BUILD FALSE
     VST3_CATEGORIES Fx Reverb
-    AU_MAIN_TYPE kAudioUnitType_MusicEffect)
+    AU_MAIN_TYPE kAudioUnitType_MusicEffect
+    AAX_CATEGORY Reverb)   # AAX: SDK incluído na JUCE 8; o Pro Tools normal exige assinatura PACE
 
 juce_add_binary_data(RoomXData SOURCES
     assets/fonts/Barlow-Regular.ttf

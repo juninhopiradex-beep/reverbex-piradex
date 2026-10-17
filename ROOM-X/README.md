@@ -51,6 +51,10 @@ cmake -S ROOM-X -B build-test -DROOMX_BUILD_TESTS=ON && cmake --build build-test
 ./build-test/roomx_plugin_test capturas          # ROOMX_TEST_MASTER / ROOMX_TEST_BETA opcionais
 ```
 
+## AAX (Pro Tools)
+O AAX é compilado no GitHub Actions para macOS (Universal 2) e Windows x64 — o SDK AAX vem incluído na JUCE 8.
+O Pro Tools normal só carrega plugins AAX **assinados pela PACE** (`wraptool`, conta PACE/iLok). Sem essas credenciais, o CI publica `...-AAX-nao-assinado.zip`, que só abre no *Pro Tools Developer*. Para assinar automaticamente, adiciona nos *Secrets* do repositório: `PACE_ACCOUNT`, `PACE_PASSWORD`, `PACE_WCGUID`, `PACE_EDEN_URL` (instalador Mac das ferramentas Eden) e, para Windows, `PACE_EDEN_WIN_URL`, `PACE_KEYFILE_B64`, `PACE_KEYPASSWORD`. A partir daí sai `...-AAX-assinado.zip`.
+
 ## Instalação
 - **macOS**: abrir o `.dmg` → `ROOM-X by Piradex 1.0.0.pkg` (VST3 em `/Library/Audio/Plug-Ins/VST3`, AU em `/Library/Audio/Plug-Ins/Components`). No Logic, para o modo MIDI carregue-o como *MIDI-controlled Effect*.
 - **Windows**: `ROOM-X-by-Piradex-1.0.0-Windows-Setup.exe` instala em `C:\Program Files\Common Files\VST3`. Sem assinatura digital paga, o Windows pode mostrar "O Windows protegeu o seu PC": **Mais informações → Executar mesmo assim**.

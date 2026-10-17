@@ -1,5 +1,9 @@
 # Changelog — ROOM-X by Piradex
 
+## 1.0.0 (beta) — 2026-10-17
+- Formato AAX (Pro Tools) para macOS e Windows; assinatura PACE automática quando houver credenciais nos segredos do repositório.
+- Controlo Temper passa a chamar-se Tempero.
+
 ## 1.0.0 (beta) — 2026-10-15
 Primeira versão completa.
 
