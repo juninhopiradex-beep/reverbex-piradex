@@ -12,17 +12,18 @@ namespace roomx::lic
 static const KeyEntry kKeys[] =
 {
     { "master", Kind::Master,
-      "a0f2747d92c737cbe4f98a4fd5c8108c",
-      "7a33847c3fdd7acc6067d25eeff7f5633962a48611fc49273448bcde4abbe0d2", 0, 0, 0 },
+      "f1dc2212d9b8fea34f372dc16c2133de",
+      "9c8fc822f5f6c979da74e816a354bb84de5d0fe651bcd7dd6aa468485adcc0ae", 0, 0, 0 },
 
-    { "beta-1", Kind::Beta,
-      "9633a8c62968c2fa5663687e00379063",
-      "7d5422d5dd9075e6ad4a387f1d7fdbd97f3f187185739d8fd846c323f7295bf3", 2027, 1, 31 },
-
-    // promoção pública (loja, posts): válida até 01/11/2026
-    { "beta-promo", Kind::Beta,
-      "d6c8264268f860a8829e89038d4f7a82",
-      "8d8828ddd10f3209756597ff6a91ae4ad9218481888e5a071a66d1acb44d5ad9", 2026, 11, 1 },
+    { "beta-01", Kind::Beta,
+      "b68d0cc9108a458fb89e423862bb0eb5",
+      "de27bdb46122633d31ded7a88b734f702322c0bbaecf76d56d4f029975582ba3", 2026, 12, 31 },
+    { "beta-02", Kind::Beta,
+      "74febec5eddb566c13c96c3d350d8ffb",
+      "dcb14e25b38c8a9086f6572f50e2396c3b13c4d17d3795b249943f127a0b3f1c", 2026, 12, 31 },
+    { "beta-03", Kind::Beta,
+      "8d794ed6bd31cd4159406de4e92f8ae1",
+      "cba091d0440d4366ec50a1945133056611b6e0961465430966da1c5cf6041142", 2026, 12, 31 },
 };
 
 int LocalPasswordLicenseProvider::numKeys() { return (int) std::size (kKeys); }
