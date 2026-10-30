@@ -34,6 +34,9 @@ Name: "pt"; MessagesFile: "compiler:Languages\Portuguese.isl"
 Name: "ptbr"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 Name: "en"; MessagesFile: "compiler:Default.isl"
 
+[Messages]
+WelcomeLabel2=Este assistente vai instalar o ROOM-X by Piradex no teu sistema.%n%nProfessional Audio Plugin | Beatfreak Music%nCriador e Desenvolvedor: Ricardo Amorim / Juninho Piradex%nVersao 2.0.0
+
 [Files]
 Source: "..\build\RoomX_artefacts\Release\VST3\ROOM-X by Piradex.vst3\*"; \
   DestDir: "{commoncf64}\VST3\ROOM-X by Piradex.vst3"; \
