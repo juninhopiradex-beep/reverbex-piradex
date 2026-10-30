@@ -59,7 +59,8 @@ class LocalPasswordLicenseProvider final : public ILicenseProvider
 public:
     LocalPasswordLicenseProvider();
 
-    bool         isUnlocked() const override { return unlocked.load(); }
+    static bool inTrial() { return juce::Time::getCurrentTime() < juce::Time (2027, 0, 1, 0, 0, 0); } // aberto ate 31/12/2026
+    bool         isUnlocked() const override { return unlocked.load() || inTrial(); }
     Kind         kind() const override       { return currentKind; }
     juce::String statusText() const override;
     int          matchPassword (const juce::String& password, bool& expired) const override;
