@@ -1,5 +1,5 @@
 // =============================================================================
-//  ROOM-X — presets de fábrica (60) + tutoriais (11). Nomes e definições
+//  ROOM-X — presets de fábrica (60 + 203 atmosferas gerados) + tutoriais (11). Nomes e definições
 //  originais Piradex. Valores em unidades reais (%, ms, Hz, x...).
 //  Parâmetros não indicados ficam no valor por defeito.
 // =============================================================================
@@ -252,6 +252,32 @@ juce::Array<juce::ValueTree> makeFactoryPresets()
     add (PB ("MIDI Bell Keys", "MIDI Performance").sp ("Glass Tunnel").mix (45).temper (90).width (5).midi (false, 600));
     add (PB ("MIDI Pedal Drone", "MIDI Performance").sp ("Zero Gravity").mix (55).temper (85).width (20).midi (true, 1500));
     add (PB ("MIDI Carve (Negative)", "MIDI Performance").sp ("Grand Arc").mix (35).temper (-80).width (55).midi (true, 120));
+
+    // =================================================================== Atmospheres (gerado)
+    // 29 espaços × 7 atmosferas = 203 presets. A atmosfera define o carácter
+    // (mistura, decaimento, posição, temper, largura); o espaço define a cor.
+    // Nome: "<Espaço> <Atmosfera>", um banco por atmosfera.
+    struct Mood { const char* tag; double mix, dec, size, pos, temper, width, pre; int target; bool dual; };
+    static const Mood moods[] = {
+        { "Cinema",   35, 1.2, 110,   0,   0, 50, 20, 1, false },
+        { "Nocturne", 30, 2.0, 120,  40,  30, 40, 40, 2, false },
+        { "Shimmer",  25, 0.8,  80, -40,  60, 30, 10, 0, false },
+        { "Shadow",   40, 1.5, 130,  60, -40, 60, 60, 2, false },
+        { "Velvet",   30, 1.0, 100,   0,  45, 45, 25, 1, false },
+        { "Metal",    20, 0.6,  70, -60,  80, 20,  5, 0, false },
+        { "Mirror",   45, 1.8, 100,   0,   0, 90, 30, 1, true  },
+    };
+    for (const Mood& m : moods)
+        for (int i = 0; i < dsp::kNumSpaces; ++i)
+        {
+            const juce::String title = juce::String (dsp::space (i).name) + " " + m.tag;
+            const juce::String bank  = "Atmospheres: " + juce::String (m.tag);
+            PB p (title.toRawUTF8(), bank.toRawUTF8());
+            p.set (P::space, i).mix (m.mix).dec (m.dec).size (m.size).pos (m.pos)
+             .temper (m.temper).width (m.width).pre (m.pre).set (P::target, m.target);
+            if (m.dual) p.dual();
+            add (p);
+        }
 
     return a;
 }

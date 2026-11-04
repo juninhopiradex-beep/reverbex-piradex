@@ -73,6 +73,19 @@ static void testModalBank()
         for (size_t i = 0; i < N; ++i) maxDiff = std::max (maxDiff, (double) std::fabs (y[i] - x[i]));
         CHECK (maxDiff == 0.0, "Temper 0 devia ser bit-exact (diff %g)\n", maxDiff);
     }
+    // Solo do banco com Temper 0 (sem ressonância) -> silêncio, sem seco
+    {
+        ModalBank b; b.prepare (fs);
+        TemperSettings s;
+        s.temper = 0.0f; s.noteWidth = 0.5f; s.notes = NoteSet::fromPitchClasses (0x091);
+        s.soloBank = true;
+        auto L = noise (N, 1), R = noise (N, 2);
+        for (size_t i = 0; i < N; i += 64)
+            b.process (L.data() + i, R.data() + i, (int) std::min<size_t> (64, N - i), s);
+        double peak = 0;
+        for (size_t i = 0; i < N; ++i) peak = std::max (peak, (double) std::fabs (L[i]));
+        CHECK (peak < 1.0e-6, "Solo com Temper 0 devia ser silêncio (pico %g)\n", peak);
+    }
 
     const uint16_t aOnly = 1u << 9;   // A
     // Temper +100: A (440) muito acima de A# (466.16)
@@ -163,8 +176,10 @@ static void testSpaces()
         CHECK (peak < 4.0, "%s: pico demasiado alto %.2f\n", space (si).name, peak);
         CHECK (energy > 0.005, "%s: sem energia\n", space (si).name);
         CHECK (tailEnergy < energy * 0.2, "%s: não decai\n", space (si).name);
-        if (rt > 0 && expected < 10.0)
-            CHECK (rt > expected * 0.35 && rt < expected * 2.2, "%s: RT60 %.2f longe de %.2f\n", space (si).name, rt, expected);
+        // Broken Space é "gated" por desenho (decaimento curto intencional): fora do critério de precisão
+        const bool gated = std::strcmp (space (si).name, "Broken Space") == 0;
+        if (rt > 0 && expected < 10.0 && ! gated)
+            CHECK (rt > expected * 0.85 && rt < expected * 1.15, "%s: RT60 %.2f fora de 0,85..1,15 de %.2f\n", space (si).name, rt, expected);
     }
 }
 

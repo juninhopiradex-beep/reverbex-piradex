@@ -87,7 +87,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
     auto dB = [] (float v, int) { return juce::String (v, 1) + " dB"; };
-    auto pct = [] (float v, int) { return juce::String (juce::roundToInt (v)) + "%"; };
+    auto pct = [] (float v, int) { return juce::String (juce::roundToInt (v)) + " %"; };
 
     // ---------------------------------------------------------------- Reverb
     auto reverb = std::make_unique<juce::AudioProcessorParameterGroup> ("reverb", "Reverb", "|");
@@ -97,7 +97,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
         reverb->addChild (std::make_unique<APC> (PID { space, 1 }, "Space", spaces, 6));
     }
     reverb->addChild (std::make_unique<APF> (PID { decay, 1 }, "Decay", logRange (0.01f, 30.0f), 1.0f,
-        Attr().withLabel ("x").withStringFromValueFunction ([] (float v, int) { return juce::String (v, v < 1.0f ? 2 : 1) + "x"; })));
+        Attr().withLabel ("x").withStringFromValueFunction ([] (float v, int) { return juce::String (v, v < 1.0f ? 2 : 1) + " x"; })));
     reverb->addChild (std::make_unique<APF> (PID { size, 1 }, "Size", juce::NormalisableRange<float> (50.0f, 200.0f, 1.0f), 100.0f,
         Attr().withLabel ("%").withStringFromValueFunction (pct)));
     reverb->addChild (std::make_unique<APF> (PID { position, 1 }, "Position", juce::NormalisableRange<float> (-99.0f, 99.0f, 1.0f), 0.0f,
@@ -119,6 +119,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
         reverb->addChild (std::make_unique<APC> (PID { preDelayDiv, 1 }, "Pre-Delay Division", divs, 4));
     }
     reverb->addChild (std::make_unique<APB> (PID { dualMono, 1 }, "Dual Mono", false));
+    reverb->addChild (std::make_unique<APB> (PID { soloBank, 1 }, "Solo Modal Bank", false));
     layout.add (std::move (reverb));
 
     // ---------------------------------------------------------------- Musical

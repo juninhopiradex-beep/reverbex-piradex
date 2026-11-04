@@ -47,7 +47,7 @@ RoomXEditor::RoomXEditor (RoomXProcessor& p)
     addAndMakeVisible (content);
     for (juce::Component* c : std::initializer_list<juce::Component*> {
              &topBar, &spaceSel, &inputFader, &preDelay, &preDiv, &mix, &decay, &size, &preSync, &killDry, &mixLock,
-             &noteScape, &target, &position, &density, &offset, &outputFader, &dualMono,
+             &noteScape, &target, &position, &density, &offset, &outputFader, &dualMono, &soloBank,
              &spectrum, &noteMode, &notesLock, &manualPanel, &sequencePanel, &midiPanel, &bypass })
         content.addAndMakeVisible (c);
     content.addChildComponent (login);
@@ -135,6 +135,8 @@ void RoomXEditor::applyLanguage()
     preSync.setButtonText ("Sync");
     killDry.setButtonText (tr ("Sem seco", "Kill Dry"));
     dualMono.setButtonText (tr ("Mono duplo", "Dual Mono"));
+    soloBank.setButtonText (tr ("Só banco", "Bank Solo"));
+    soloBank.setTooltip (tr ("Ouvir só o banco modal (ressonância), sem o sinal seco", "Hear only the modal bank (resonance), without the dry signal"));
     bypass.setButtonText ("Bypass");
     preSync.setTooltip (tr ("Pré-atraso sincronizado com o andamento do DAW", "Pre-delay synced to the DAW tempo"));
     killDry.setTooltip (tr ("Remove o sinal seco (ideal em envio/aux)", "Removes the dry signal (ideal on a send/aux)"));
@@ -197,12 +199,13 @@ void RoomXEditor::layoutContent()
         preDiv.setBounds (pre.reduced (6, 0));
         mix.setBounds (row1.reduced (6, 0));
         mixLock.setBounds (mix.getRight() - 30, mix.getY() - 2, 24, 24);
+        // Kill Dry junto ao MIX (canto superior esquerdo da célula), não debaixo de SIZE
+        killDry.setBounds (mix.getX() + 2, mix.getY() - 2, 72, 22);
         decay.setBounds (row2.removeFromLeft (cw).reduced (6, 0));
         size.setBounds (row2.reduced (6, 0));
         r.removeFromTop (14);
         auto row3 = r.removeFromTop (30);
         preSync.setBounds (row3.removeFromLeft (cw).withSizeKeepingCentre (96, 28));
-        killDry.setBounds (row3.withSizeKeepingCentre (96, 28));
     }
 
     noteScape.setBounds (juce::Rectangle<int> (h + 6, h + 6).withCentre ({ kBaseW / 2, top + h / 2 }));
@@ -219,6 +222,7 @@ void RoomXEditor::layoutContent()
         offset.setBounds (row2.reduced (6, 0));
         r.removeFromTop (14);
         auto row3 = r.removeFromTop (30);
+        soloBank.setBounds (row3.removeFromLeft (cw).withSizeKeepingCentre (96, 28));
         dualMono.setBounds (row3.withSizeKeepingCentre (110, 28));
     }
 
@@ -268,7 +272,7 @@ void RoomXEditor::Content::paint (juce::Graphics& g)
     g.fillRect (e.footer.withHeight (1));
     auto f = e.footer.reduced (16, 0);
     g.setColour (col::textFaint);
-    g.setFont (Fonts::text (13.0f));
+    g.setFont (Fonts::text (14.0f));
     g.drawText (U ("ROOM-X by Piradex  ·  v") + ROOMX_VERSION_STRING + U ("  ·  Beatfreak Developer"), f, juce::Justification::centredLeft);
     auto& L = lic::License::get();
     if (L.isUnlocked())

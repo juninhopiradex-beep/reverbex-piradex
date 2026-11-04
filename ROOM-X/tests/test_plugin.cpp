@@ -4,7 +4,7 @@
 //   · plugin bloqueado = áudio bit-transparente
 //   · reverb a funcionar depois de desbloquear, bypass transparente
 //   · estado: guardar / repor / duplicar instância, campos futuros ignorados
-//   · 60+ presets de fábrica + 11 tutoriais carregam e soam (sem NaN)
+//   · 263 presets de fábrica + 11 tutoriais (contagem exacta) carregam e soam (sem NaN)
 //   · taxas 44.1–192 kHz e blocos 16–4096 (incl. tamanhos irregulares)
 //   · capturas da interface (Early / All / Late, Sequence, MIDI, login)
 //
@@ -269,8 +269,15 @@ static void testState()
     pump (120);
     u.undoManager.beginNewTransaction();
     u.undoManager.undo();
-    pump (60);
-    check (std::abs (getParam (u, P::size) - 100.0f) < 0.5f, "Undo repõe Size");
+    // espera pela condição (até 3 s) em vez de um tempo fixo: sob carga o
+    // listener assíncrono do APVTS pode demorar mais do que 60 ms
+    bool restored = false;
+    for (int k = 0; k < 300 && ! restored; ++k)
+    {
+        pump (10);
+        restored = std::abs (getParam (u, P::size) - 100.0f) < 0.5f;
+    }
+    check (restored, "Undo repõe Size");
 }
 
 // -----------------------------------------------------------------------------
@@ -282,8 +289,11 @@ static void testPresets()
     int factory = 0, tutorial = 0;
     for (auto& e : pm.entries())
         if (e.factory) { ++factory; if (e.bank == "Tutorial") ++tutorial; }
-    check (factory - tutorial >= 60, "presets de fábrica >= 60 (" + juce::String (factory - tutorial) + ")");
-    check (tutorial >= 11, "presets tutoriais >= 11 (" + juce::String (tutorial) + ")");
+    // contagem exacta: falha se mudar sem atualizar este teste, a documentação e o CHANGELOG
+    constexpr int kExpectedFactory = 60 + 29 * 7;   // 60 de fábrica + 203 atmosferas
+    constexpr int kExpectedTutorial = 11;
+    check (factory - tutorial == kExpectedFactory, "presets de fábrica = " + juce::String (kExpectedFactory) + " (" + juce::String (factory - tutorial) + ")");
+    check (tutorial == kExpectedTutorial, "presets tutoriais = " + juce::String (kExpectedTutorial) + " (" + juce::String (tutorial) + ")");
 
     juce::StringArray names;
     bool unique = true;

@@ -31,6 +31,7 @@ struct TemperSettings
     float releaseMs   = 60.0f;
     float minBandwidthHz = 0.0f;  // limita a duração do "ring" (caminho Early)
     bool  eco         = false;
+    bool  soloBank    = false;    // ouvir só o banco modal (sem sinal seco nem filtrado)
 };
 
 class ModalBank

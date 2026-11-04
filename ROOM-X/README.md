@@ -14,7 +14,7 @@ Uma reverb de estúdio premium cujo campo ressonante se afina por **notas, acord
 - **NoteScape**: visualizador radial segmentado de energia por nota (original), com buracos visíveis para Tempero negativo; clique nas notas para as ligar/desligar.
 - **Espectro wet** 20 Hz–20 kHz com zonas das notas, Tempero Range e filtros.
 - Selecção de notas: **Manual** (12 teclas, pintar por arrasto, Escolher escala: 12 intervalos, 25 acordes, 24 escalas, 13 modos; Transpose; Limpar/Todas/Inverter), **Sequence** (8 linhas, 1–64 compassos, grelha 1/1…1/16 + tercinas, session offset, transpose, retrigger, arm/seguir DAW, criar/mover/redimensionar/duplicar regiões, zoom e navegador) e **MIDI** (todos os canais, sustain CC64, Octave Repeat, release ajustável, medidor de actividade).
-- **29 espaços originais** em 5 categorias · **60 presets de fábrica + 11 tutoriais** · presets do utilizador (.roomx), importar, A/B com cópia nos dois sentidos, Undo/Redo, Note Lock, Mix Lock, modo **Eco**, afinação global (A4 400–500 Hz, ±50 cents, sustenidos/bemóis).
+- **29 espaços originais** em 5 categorias · **263 presets de fábrica (60 + 203 atmosferas) + 11 tutoriais** · presets do utilizador (.roomx), importar, A/B com cópia nos dois sentidos, Undo/Redo, Note Lock, Mix Lock, modo **Eco**, afinação global (A4 400–500 Hz, ±50 cents, sustenidos/bemóis).
 - Interface escalável 70–150 %.
 - **Idioma PT | EN** em *Info › Idioma* (e no ecrã de senha): troca imediata; primeira abertura segue o idioma do sistema; escolha comum a todos os plugins Piradex. Os nomes de automação no DAW ficam fixos.
 

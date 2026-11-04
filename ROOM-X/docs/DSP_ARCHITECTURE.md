@@ -47,7 +47,7 @@ y = low + high + midGain · mid + resGain · Σ g_k · BP_k(x)
 - Só os ressoadores activos são calculados (processados aos pares, 4 recursões independentes por iteração → vectorizável). Ganhos por nota com ataque 15 ms / release configurável (MIDI) → mudanças de acorde sem cliques.
 
 ## Offset
-Desvio de frequência por banda lateral única (transformador de Hilbert por dois ramos de passa-tudo + modulação em quadratura), −500…+500 Hz, aplicado aos dois caminhos. Fase calculada em `double` e partilhada entre canais.
+Desvio de frequência por banda lateral única (transformador de Hilbert por dois ramos de passa-tudo + modulação em quadratura), −500…+500 Hz, aplicado aos dois caminhos. O oscilador é um fasor avançado por rotação complexa (`double`, renormalizado a cada bloco), partilhado entre canais: sem `sin`/`cos` por amostra (v2.0.1; saída numericamente idêntica à versão anterior, diferença ≤ 10⁻²⁰).
 
 ## Filtros wet, Position, Mix
 - Low/High Cut 20 Hz–20 kHz, 12 dB/oct (SVF) ou 36 dB/oct (Butterworth de 6.ª ordem, 3 SVF).
@@ -63,12 +63,24 @@ Desvio de frequência por banda lateral única (transformador de Hilbert por doi
 ## Espaços (29)
 Receitas originais em `SpaceLibrary.cpp` (RT60, rácios graves/agudos, janela e forma das reflexões, comprimentos das linhas, difusão, modulação, dispersão, largura estéreo, seed). Categorias: Rooms (6), Halls (6), Mechanical (5), Unusual (6), Special FX (6).
 
-## Medições (testes, 48 kHz, 1 núcleo)
-| Caso | CPU |
-|---|---|
-| Normal (Tempero 0) | ~5 % |
-| Tempero 60, acorde maior | ~7.5 % |
-| Pior caso: 12 notas, All, Dual Mono | ~22 % |
-| Pior caso em Eco | ~18 % |
+## Calibração do RT60 (v2.0.1)
+O decaimento medido (Schroeder, ajuste −5…−25 dB) saía em média ~20 % mais curto do que o RT60 mostrado. O motor passou a aplicar um fator de calibração antes de calcular os ganhos do FDN (`FDNReverb::setDecay`):
+- base 1,25;
+- +0,6 de compensação abaixo de 0,8 s (decaimentos curtos desviavam mais);
+- −0,10 de correção acima de 3 s (decaimentos longos desviavam para cima).
 
-Os valores vêm do servidor de testes Linux; num Mac moderno são inferiores.
+Resultado no `test_dsp` (rácio medido/alvo): mediana 1,03; 28 de 29 espaços entre 0,85 e 1,15. O **Broken Space** fica fora do critério: é um espaço "gated" com decaimento curto intencional.
+
+A barra superior mostra o RT60 **nominal** do espaço × Decay × Size, que após a calibração coincide com o decaimento produzido.
+
+## Medições (48 kHz, 1 núcleo)
+Medidas com `test_dsp` (g++ -O2, Linux x86-64), v2.0.1:
+
+| Caso | CPU medido | CPU v2.0.0 (documentado) |
+|---|---|---|
+| Normal (Tempero 0) | 2,9 % | ~5 % |
+| Tempero 60, acorde maior | 4,1 % | ~7,5 % |
+| Pior caso: 12 notas, All, Dual Mono | 12,7 % | ~22 % |
+| Pior caso em Eco | 10,3 % | ~18 % |
+
+As medições de v2.0.0 eram de outro ambiente e não são reproduzíveis com o código atual; a tabela foi atualizada com os valores do `test_dsp`. Num Mac moderno os valores tendem a ser inferiores.

@@ -87,7 +87,9 @@ private:
     float structFade = 1.0f;      // 0..1
     int   fadeDir = 0;            // -1 a descer, +1 a subir
     float fadeStep = 0.01f;
-    double shiftPhase = 0.0;
+    // oscilador do Offset: fasor (cos, sin) avançado por rotação complexa,
+    // sem cos/sin por amostra (renormalizado a cada bloco)
+    double shiftRc = 1.0, shiftRs = 0.0;
     float shiftCos[ReverbCore::kBlock] {}, shiftSin[ReverbCore::kBlock] {};
     float tmp[4][ReverbCore::kBlock] {};
     bool  firstBlock = true;

@@ -161,7 +161,8 @@ void TopBar::paint (juce::Graphics& g)
     juce::String bank = juce::isPositiveAndBelow (idx, list.size()) ? list[idx].bank : juce::String();
     g.setColour (col::text);
     g.setFont (Fonts::label (15.5f));
-    const auto name = presets.currentName() + (dirty ? " *" : "");
+    // "(alterado)" em vez de asterisco: explica-se sozinho, sem legenda
+    const auto name = presets.currentName() + (dirty ? juce::String (" ") + tr ("(alterado)", "(modified)") : juce::String());
     g.drawText (name, t, juce::Justification::centredLeft);
     if (bank.isNotEmpty())
     {

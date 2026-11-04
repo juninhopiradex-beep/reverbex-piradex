@@ -14,7 +14,7 @@
 - Sem licença: saída == entrada bit a bit.
 - Com licença: cauda de reverb, bypass bit-transparente após a rampa, Kill Dry + Mix 0 = silêncio, MIDI + Octave Repeat + sustain.
 - Estado: guardar/repor (parâmetros, sequência, afinação, bemóis), estado de versão futura com campos desconhecidos, sessão antiga sem sequência, Undo.
-- Presets: ≥ 60 + 11, nomes únicos, todos carregam e soam sem NaN e sem ficarem "sujos", Note Lock, A/B, cópia B→A, leitura de `.roomx`.
+- Presets: 263 + 11 exactos (contagem testada), nomes únicos, todos carregam e soam sem NaN e sem ficarem "sujos", Note Lock, A/B, cópia B→A, leitura de `.roomx`.
 - Taxas 44.1–192 kHz × blocos 16–4096 (incl. blocos menores do que o preparado), mono → estéreo.
 - Capturas da interface (login, All, Early, Late com Tempero negativo, Sequence, MIDI) → artefacto `ROOM-X-capturas-UI`.
 

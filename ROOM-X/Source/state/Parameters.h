@@ -31,6 +31,7 @@ inline constexpr const char* highCut      = "highCut";
 inline constexpr const char* highCutSlope = "highCutSlope";
 inline constexpr const char* space        = "space";
 inline constexpr const char* dualMono     = "dualMono";
+inline constexpr const char* soloBank     = "soloBank";
 inline constexpr const char* bypass       = "bypass";
 inline constexpr const char* eco          = "eco";
 inline constexpr const char* noteMode     = "noteMode";

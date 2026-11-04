@@ -336,6 +336,7 @@ void ScaleBrowser::mouseWheelMove (const juce::MouseEvent&, const juce::MouseWhe
 ManualPanel::ManualPanel (Context& c) : ctx (c), notes (c.apvts, P::notes), pads (c)
 {
     addAndMakeVisible (pads);
+    choose.getProperties().set ("highlight", true);   // "Escolher escala…": ação principal, em destaque na cor do alvo
     for (auto* b : { &choose, &clear, &all, &invert })
     {
         b->getProperties().set ("fontSize", 14.0);

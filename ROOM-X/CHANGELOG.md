@@ -1,5 +1,23 @@
 # Changelog — ROOM-X by Piradex
 
+## 2.0.1 — não publicado
+### Áudio
+- Calibração do decaimento: o RT60 produzido passa a coincidir com o mostrado (mediana medido/alvo 0,80 → 1,03; 28 de 29 espaços entre 0,85 e 1,15). O Broken Space, "gated" por desenho, fica fora deste critério.
+- Offset: oscilador por rotação complexa em vez de `sin`/`cos` por amostra; saída numericamente idêntica.
+- Novo botão "Só banco" (*Solo Modal Bank*): ouve só a ressonância do banco modal, sem o sinal seco nem o reverb. Não altera presets nem sessões antigas (parâmetro novo, desligado por omissão).
+- Presets: +203 de fábrica (29 espaços × 7 atmosferas: Cinema, Nocturne, Shimmer, Shadow, Velvet, Metal, Mirror). Total: 263 de fábrica + 11 tutoriais.
+- Interface: o asterisco de preset alterado passa a "(alterado)"; "Escolher escala…" em destaque na cor do alvo; rodapé com texto maior; unidades com espaço (100 %, 1.0 x). Kill Dry movido para junto do MIX; "Escolher escala…" com destaque pelo sistema de cores do look-and-feel.
+- Medição: o custo de CPU do Offset (oscilador por rotação) não mudou de forma mensurável face a 2.0.0 (≈0,18 s por 60 s de áudio, antes e depois). A alteração mantém-se pela precisão e pela ausência de `sin`/`cos` por amostra, não por poupança de CPU.
+- Acessibilidade: cor de texto secundário (`textFaint`) ajustada para contraste WCAG AA (≥ 4,5:1) sobre o fundo e os painéis.
+- Testes: contagem de presets exata (falha se mudar); teste de Undo espera pela condição em vez de tempo fixo.
+
+### Repositório
+- Removidos da raiz o modelo antigo de projeto JUCE ("ReverbEx": `CMakeLists.txt`, `Source/`) e o workflow `build.yml`, que compilava esse modelo a cada push para `main`. O pipeline ativo é `.github/workflows/roomx.yml`.
+
+### Documentação e testes
+- Tabela de CPU atualizada com medições reproduzíveis; calibração do RT60 documentada.
+- Teste de RT60 mais exigente (0,85–1,15 do alvo, exceto Broken Space).
+
 ## 2.0.0 — 2026-10-17
 - Interface em **Português e Inglês**: seletor PT | EN em *Info › Idioma* e no ecrã de senha; troca imediata, sem reabrir o plugin. Na primeira abertura segue o idioma do sistema. A escolha é comum a todos os plugins Piradex (`Piradex.settings`). Os nomes de automação no DAW não mudam — sessões antigas abrem iguais.
 - Formato **AAX** (Pro Tools) para macOS e Windows.

@@ -126,11 +126,12 @@ void RoomXLookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Button& b,
     const bool on = b.getToggleState();
     const float corner = (float) b.getProperties().getWithDefault ("corner", 6.0);
     const bool danger = (bool) b.getProperties().getWithDefault ("danger", false);
+    const bool hi = (bool) b.getProperties().getWithDefault ("highlight", false);   // ação principal: acento
     const auto acc = danger ? col::danger : accent.current;
 
-    g.setColour (on ? acc.withAlpha (0.16f) : (down ? col::panelHi.brighter (0.08f) : (over ? col::panelHi.brighter (0.04f) : col::panelHi)));
+    g.setColour (on || hi ? acc.withAlpha (hi && ! on ? 0.14f : 0.16f) : (down ? col::panelHi.brighter (0.08f) : (over ? col::panelHi.brighter (0.04f) : col::panelHi)));
     g.fillRoundedRectangle (r, corner);
-    g.setColour (on ? acc.withAlpha (0.85f) : (over ? col::lineHi : col::line));
+    g.setColour (on || hi ? acc.withAlpha (hi && ! on ? 0.7f : 0.85f) : (over ? col::lineHi : col::line));
     g.drawRoundedRectangle (r, corner, 1.0f);
 }
 
@@ -138,8 +139,9 @@ void RoomXLookAndFeel::drawButtonText (juce::Graphics& g, juce::TextButton& b, b
 {
     const bool on = b.getToggleState();
     const bool danger = (bool) b.getProperties().getWithDefault ("danger", false);
+    const bool hi = (bool) b.getProperties().getWithDefault ("highlight", false);
     g.setFont (getTextButtonFont (b, b.getHeight()));
-    g.setColour (! b.isEnabled() ? col::textFaint : on ? (danger ? col::danger : col::text) : (over ? col::text : col::textDim));
+    g.setColour (! b.isEnabled() ? col::textFaint : hi ? accent.current : on ? (danger ? col::danger : col::text) : (over ? col::text : col::textDim));
     g.drawFittedText (b.getButtonText(), b.getLocalBounds().reduced (4, 0), juce::Justification::centred, 1);
 }
 

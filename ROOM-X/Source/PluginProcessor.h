@@ -84,7 +84,7 @@ private:
     // ponteiros para os valores crus dos parâmetros
     struct Raw
     {
-        std::atomic<float> *input, *output, *mix, *killDry, *preDelay, *preDelaySync, *preDelayDiv,
+        std::atomic<float> *input, *output, *mix, *killDry, *soloBank, *preDelay, *preDelaySync, *preDelayDiv,
                            *decay, *size, *position, *density, *offset, *temper, *noteWidth, *target,
                            *rangeLow, *rangeHigh, *lowCut, *lowCutSlope, *highCut, *highCutSlope,
                            *space, *dualMono, *bypass, *eco, *noteMode, *notes, *midiOctave, *midiRelease,

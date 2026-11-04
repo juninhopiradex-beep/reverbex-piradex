@@ -10,6 +10,14 @@ constexpr int kLenOrder[16] = { 0, 8, 2, 10, 4, 12, 6, 14, 1, 9, 3, 11, 5, 13, 7
 // padrões de sinal de saída ortogonais (decorrelação L/R)
 constexpr float kOutL[16] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 constexpr float kOutR[16] = { 1,-1, 1,-1,-1, 1,-1, 1, 1,-1, 1,-1,-1, 1,-1, 1 };
+// calibração do decaimento: o motor produzia ~0,80 do RT60 nominal (medido com
+// Schroeder -5..-25 dB). Ajustado para que o medido coincida com o mostrado.
+constexpr float kRt60Calib = 1.25f;
+// os decaimentos curtos desviam mais (medição 0,72 a 0,77 para 0,22–0,32 s):
+// compensação extra que cresce abaixo de 0,8 s
+constexpr float kRt60ShortBoost = 0.6f;
+// os decaimentos longos (> 3 s) desviam para cima (~1,12–1,17): correção negativa
+constexpr float kRt60LongCut = 0.10f;
 constexpr float kIn[16]   = { 1, 1,-1, 1, 1,-1,-1, 1,-1, 1, 1,-1, 1,-1, 1, 1 };
 }
 
@@ -94,6 +102,8 @@ void FDNReverb::setDecay (float rt60, float sizeScale) noexcept
 {
     if (def == nullptr) return;
     rt60 = std::clamp (rt60, 0.03f, 600.0f);
+    rt60 *= kRt60Calib + kRt60ShortBoost * std::max (0.0f, 0.8f - rt60) / 0.8f
+                       - kRt60LongCut * std::min (1.0f, std::max (0.0f, rt60 - 3.0f) / 3.0f);
     const float lowRt  = rt60 * std::max (0.3f, def->lfRatio);
     const float highRt = rt60 * std::clamp (def->hfRatio, 0.05f, 1.0f);
     const double k = -3.0 / fs;

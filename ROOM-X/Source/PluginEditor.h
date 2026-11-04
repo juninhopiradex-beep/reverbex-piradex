@@ -70,6 +70,7 @@ private:
     roomx::ui::Knob offset   { proc.apvts, roomx::params::offset, "OFFSET", true };
     roomx::ui::Fader outputFader { proc.apvts, roomx::params::output, "OUTPUT" };
     roomx::ui::ParamToggle dualMono { proc.apvts, roomx::params::dualMono, "Dual Mono" };
+    roomx::ui::ParamToggle soloBank { proc.apvts, roomx::params::soloBank, "Solo" };
 
     // ---- espectro + selecção de notas
     roomx::ui::SpectrumView spectrum { ctx };

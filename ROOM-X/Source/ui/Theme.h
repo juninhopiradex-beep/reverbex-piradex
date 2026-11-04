@@ -22,7 +22,8 @@ namespace col
     inline const juce::Colour lineHi    { 0xff343b48 };
     inline const juce::Colour text      { 0xffe6e9ef };
     inline const juce::Colour textDim   { 0xff8b93a3 };
-    inline const juce::Colour textFaint { 0xff566070 };
+    // ajustado para contraste WCAG AA (≥ 4,5:1) sobre bg, panel e well
+    inline const juce::Colour textFaint { 0xff7a8497 };
     inline const juce::Colour silver    { 0xfff4f6fa };   // notas seleccionadas
     inline const juce::Colour danger    { 0xffff4d5e };
     inline const juce::Colour warn      { 0xffffa53d };

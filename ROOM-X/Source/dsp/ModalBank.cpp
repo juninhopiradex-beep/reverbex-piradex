@@ -77,6 +77,12 @@ void ModalBank::process (float* L, float* R, int n, const TemperSettings& s) noe
     // ---- totalmente neutro: devolve o sinal intacto (bit-exact)
     if (std::fabs (target) < 1.0e-5f && std::fabs (temperNow) < 1.0e-5f)
     {
+        // solo: sem ressonância não há nada para ouvir -> silêncio
+        if (s.soloBank)
+        {
+            std::fill (L, L + n, 0.0f);
+            std::fill (R, R + n, 0.0f);
+        }
         if (numActive > 0 || temperNow != 0.0f) reset();
         return;
     }
@@ -219,7 +225,7 @@ void ModalBank::process (float* L, float* R, int n, const TemperSettings& s) noe
             const float lo = useLow  ? splitLow[ch][1].lowpass (splitLowC[1], splitLow[ch][0].lowpass (splitLowC[0], x))      : 0.0f;
             const float hi = useHigh ? splitHigh[ch][1].highpass (splitHighC[1], splitHigh[ch][0].highpass (splitHighC[0], x)) : 0.0f;
             const float m  = x - lo - hi;
-            y[i] = lo + hi + mg * m + rg * bufRes[ch][i];
+            y[i] = s.soloBank ? rg * bufRes[ch][i] : lo + hi + mg * m + rg * bufRes[ch][i];
         }
     }
 }

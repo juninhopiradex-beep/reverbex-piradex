@@ -142,13 +142,13 @@ void ReverbEngine::prepare (double sampleRate, int)
     fadeStep = (float) (1.0 / (0.015 * fs));
     firstBlock = true;
     curSpace = -1;
-    shiftPhase = 0.0;
+    shiftRc = 1.0; shiftRs = 0.0;
 }
 
 void ReverbEngine::reset() noexcept
 {
     for (auto& c : cores) c.reset();
-    shiftPhase = 0.0;
+    shiftRc = 1.0; shiftRs = 0.0;
 }
 
 void ReverbEngine::applyStructure (const EngineParams& p) noexcept
@@ -188,14 +188,18 @@ void ReverbEngine::process (const float* inL, const float* inR, float* outL, flo
 
         if (shiftOn)
         {
+            const double cd = std::cos (dphi), sd = std::sin (dphi);
             for (int i = 0; i < m; ++i)
             {
-                shiftPhase += dphi;
-                if (shiftPhase > kTwoPi) shiftPhase -= kTwoPi;
-                if (shiftPhase < 0.0)    shiftPhase += kTwoPi;
-                shiftCos[i] = (float) std::cos (shiftPhase);
-                shiftSin[i] = (float) std::sin (shiftPhase);
+                const double c = shiftRc * cd - shiftRs * sd;
+                const double s = shiftRs * cd + shiftRc * sd;
+                shiftRc = c;
+                shiftRs = s;
+                shiftCos[i] = (float) c;
+                shiftSin[i] = (float) s;
             }
+            const double r = std::sqrt (shiftRc * shiftRc + shiftRs * shiftRs);
+            if (r > 0.0) { shiftRc /= r; shiftRs /= r; }
         }
 
         const float* iL = inL + done;

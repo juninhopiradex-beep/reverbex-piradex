@@ -17,7 +17,7 @@ RoomXProcessor::RoomXProcessor()
 {
     auto f = [this] (const char* id) { auto* p = apvts.getRawParameterValue (id); jassert (p != nullptr); return p; };
     raw.input = f (P::input);         raw.output = f (P::output);       raw.mix = f (P::mix);
-    raw.killDry = f (P::killDry);     raw.preDelay = f (P::preDelay);   raw.preDelaySync = f (P::preDelaySync);
+    raw.killDry = f (P::killDry);     raw.soloBank = f (P::soloBank);     raw.preDelay = f (P::preDelay);   raw.preDelaySync = f (P::preDelaySync);
     raw.preDelayDiv = f (P::preDelayDiv); raw.decay = f (P::decay);     raw.size = f (P::size);
     raw.position = f (P::position);   raw.density = f (P::density);     raw.offset = f (P::offset);
     raw.temper = f (P::temper);       raw.noteWidth = f (P::noteWidth); raw.target = f (P::target);
@@ -249,6 +249,7 @@ void RoomXProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiB
     ep.temper.tuning    = currentTuning();
     ep.temper.releaseMs = releaseMs;
     ep.temper.eco       = ep.eco;
+    ep.temper.soloBank  = raw.soloBank->load() > 0.5f;
 
     // ---- ganhos
     const float mixAmt = juce::jlimit (0.0f, 1.0f, raw.mix->load() / 100.0f);
