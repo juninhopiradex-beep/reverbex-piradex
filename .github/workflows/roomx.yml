@@ -251,6 +251,35 @@ jobs:
             ROOM-X/pluginval-Windows.log
 
   # ---------------------------------------------------------------------------
+  # ---------------------------------------------------------------------------
+  # builds de branches (não main): release em RASCUNHO com os instaladores.
+  # Rascunhos só são visíveis para quem tem acesso de escrita ao repositório.
+  rascunho:
+    if: github.ref != 'refs/heads/main'
+    needs: [macos, windows, testes-plugin]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Criar release de rascunho com os instaladores
+        run: |
+          TAG="build-${GITHUB_SHA::7}"
+          FICHEIROS=$(find dist -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.zip' \))
+          echo "$FICHEIROS"
+          gh release create "$TAG" $FICHEIROS -R "$GITHUB_REPOSITORY" \
+            --draft --prerelease --target "$GITHUB_SHA" \
+            --title "ROOM-X $VERSAO (build $TAG, $GITHUB_REF_NAME)" \
+            --notes "Build de teste a partir de $GITHUB_REF_NAME. Rascunho: não publicar."
+
   publicar:
     # só publica a release a partir do main; builds noutros branches ficam como artefactos
     if: github.ref == 'refs/heads/main'
