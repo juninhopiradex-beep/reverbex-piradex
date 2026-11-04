@@ -197,6 +197,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
     auto util = std::make_unique<juce::AudioProcessorParameterGroup> ("utility", "Utility", "|");
     util->addChild (std::make_unique<APB> (PID { bypass, 1 }, "Bypass", false));
     util->addChild (std::make_unique<APB> (PID { eco, 1 }, "Eco Mode", false));
+    util->addChild (std::make_unique<APC> (PID { testSignal, 1 }, "Test Signal", juce::StringArray { "Off", "Impulse", "Pink Noise" }, 0));
     util->addChild (std::make_unique<APF> (PID { tuneRef, 1 }, "Reference A4", juce::NormalisableRange<float> (400.0f, 500.0f, 0.1f), 440.0f,
         Attr().withLabel ("Hz").withAutomatable (false).withStringFromValueFunction ([] (float v, int) { return juce::String (v, 1) + " Hz"; })));
     util->addChild (std::make_unique<APF> (PID { tuneCents, 1 }, "Fine Tune", juce::NormalisableRange<float> (-50.0f, 50.0f, 0.1f), 0.0f,

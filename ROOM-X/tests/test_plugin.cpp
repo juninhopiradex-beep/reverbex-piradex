@@ -281,6 +281,128 @@ static void testState()
 }
 
 // -----------------------------------------------------------------------------
+// Undo desfaz a troca de preset (cada carregamento abre uma transação)
+static void testPresetUndo()
+{
+    std::printf ("[undo de presets]\n");
+    RoomXProcessor p;
+    p.prepareToPlay (48000.0, 512);
+    // um preset com espaço diferente do 0 (o Undo tem de repor o espaço anterior)
+    p.presets->load (0);
+    const float before = getParam (p, P::space);
+    int other = -1;
+    for (int i = 1; i < p.presets->entries().size() && other < 0; ++i)
+    {
+        p.presets->load (i);
+        if (std::abs (getParam (p, P::space) - before) > 0.5f) other = i;
+    }
+    p.presets->load (0);
+    p.presets->load (other);
+    pump (200);   // as alterações do APVTS chegam à árvore de estado de forma assíncrona
+    const float after = getParam (p, P::space);
+    bool restored = false;
+    p.undoManager.undo();
+    for (int k = 0; k < 300 && ! restored; ++k)
+    {
+        pump (10);
+        restored = std::abs (getParam (p, P::space) - before) < 0.5f;
+    }
+    check (other >= 0 && std::abs (after - before) > 0.5f && restored, "Undo desfaz o carregamento de preset (espaço " + juce::String (before, 0) + " ↔ " + juce::String (after, 0) + ")");
+}
+
+// -----------------------------------------------------------------------------
+// igualar A/B: o slot B mais longo (mais energia) recebe trim negativo; no slot A o trim é zero
+static void testAbMatch()
+{
+    std::printf ("[igualar A/B]\n");
+    RoomXProcessor p;
+    p.prepareToPlay (48000.0, 512);
+    int idx = 0;
+    for (int i = 0; i < dsp::kNumSpaces; ++i)
+        if (juce::String (dsp::space (i).name) == "Aurora Hall") idx = i;
+
+    auto configure = [&] (float decay)
+    {
+        setParam (p, P::space, (float) idx);
+        setParam (p, P::mix, 100.0f);
+        setParam (p, P::decay, decay);
+        setParam (p, P::size, 100.0f);
+        setParam (p, P::target, 1.0f);
+        setParam (p, P::eco, 0.0f);
+        setParam (p, P::dualMono, 0.0f);
+        setParam (p, P::bypass, 0.0f);
+        setParam (p, P::temper, 0.0f);
+    };
+    auto measureNow = [&]
+    {
+        p.armRt60Measurement();
+        juce::AudioBuffer<float> buf (2, 512);
+        juce::MidiBuffer midi;
+        int b = 0;
+        while (p.rt60State() != 3 && b < 4000) { buf.clear(); p.processBlock (buf, midi); ++b; }
+        (void) p.rt60Result();   // calcula e guarda a energia do slot
+    };
+
+    p.presets->selectSlot (0);
+    configure (1.0f);
+    measureNow();
+    p.presets->selectSlot (1);
+    configure (2.0f);
+    measureNow();
+
+    p.setAbMatch (true);
+    p.presets->selectSlot (1);
+    p.applyAbMatch();
+    check (p.abTrim() < -0.5f, "slot B mais longo recebe trim negativo (" + juce::String (p.abTrim(), 2) + " dB)");
+
+    p.presets->selectSlot (0);
+    p.applyAbMatch();
+    check (std::abs (p.abTrim()) < 1.0e-6f, "slot A não recebe trim");
+
+    p.setAbMatch (false);
+    p.presets->selectSlot (1);
+    p.applyAbMatch();
+    check (std::abs (p.abTrim()) < 1.0e-6f, "sem igualação, sem trim");
+}
+
+// -----------------------------------------------------------------------------
+// o RT60 medido ao vivo (impulso de teste + Schroeder) tem de bater com o alvo do espaço
+static void testRt60Live()
+{
+    std::printf ("[RT60 medido ao vivo]\n");
+    RoomXProcessor p;
+    p.prepareToPlay (48000.0, 512);
+    int idx = 0;
+    for (int i = 0; i < dsp::kNumSpaces; ++i)
+        if (juce::String (dsp::space (i).name) == "Aurora Hall") idx = i;
+    setParam (p, P::space, (float) idx);
+    setParam (p, P::mix, 100.0f);
+    setParam (p, P::decay, 1.0f);
+    setParam (p, P::size, 100.0f);
+    setParam (p, P::target, 1.0f);
+    setParam (p, P::eco, 0.0f);
+    setParam (p, P::dualMono, 0.0f);
+    setParam (p, P::bypass, 0.0f);
+    setParam (p, P::temper, 0.0f);
+
+    p.armRt60Measurement();
+    juce::AudioBuffer<float> buf (2, 512);
+    juce::MidiBuffer midi;
+    int blocks = 0;
+    while (p.rt60State() != 3 && blocks < 4000)
+    {
+        buf.clear();
+        p.processBlock (buf, midi);
+        ++blocks;
+    }
+    const double rt = p.rt60Result();
+    const double expected = dsp::ReverbEngine::effectiveRt60 (idx, 1.0f, 1.0f);
+    std::printf ("  alvo %.2f s, medido ao vivo %.2f s\n", expected, rt);
+    check (rt > 0.0 && std::abs (rt / expected - 1.0) < 0.15,
+           "RT60 medido ao vivo dentro de ±15 % do alvo (" + juce::String (rt, 2) + " s)");
+}
+
+// -----------------------------------------------------------------------------
 static void testPresets()
 {
     std::printf ("[presets]\n");
@@ -299,6 +421,12 @@ static void testPresets()
     bool unique = true;
     for (auto& e : pm.entries()) { if (names.contains (e.name)) unique = false; names.add (e.name); }
     check (unique, "nomes de preset únicos");
+
+    // pesquisa por nome e por banco
+    check (pm.search ("aurora hall").size() >= 7, "pesquisa 'aurora hall' encontra as atmosferas (" + juce::String (pm.search ("aurora hall").size()) + ")");
+    check (pm.search ("Atmospheres: Cinema").size() == 29, "pesquisa por banco 'Atmospheres: Cinema' devolve os 29 espaços");
+    check (pm.search ("   ").isEmpty(), "pesquisa vazia não devolve nada");
+    check (pm.search ("zzz-inexistente").isEmpty(), "pesquisa sem resultados vazia");
 
     p.prepareToPlay (48000.0, 256);
     juce::MidiBuffer midi;
@@ -718,6 +846,9 @@ int main (int argc, char** argv)
     testTransparencyAndReverb();
     testState();
     testPresets();
+    testRt60Live();
+    testAbMatch();
+    testPresetUndo();
     testRates();
     testLanguage();
     if (argc > 1) snapshots (juce::File (juce::String (argv[1])));

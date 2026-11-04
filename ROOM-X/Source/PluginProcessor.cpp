@@ -17,7 +17,7 @@ RoomXProcessor::RoomXProcessor()
 {
     auto f = [this] (const char* id) { auto* p = apvts.getRawParameterValue (id); jassert (p != nullptr); return p; };
     raw.input = f (P::input);         raw.output = f (P::output);       raw.mix = f (P::mix);
-    raw.killDry = f (P::killDry);     raw.soloBank = f (P::soloBank);     raw.preDelay = f (P::preDelay);   raw.preDelaySync = f (P::preDelaySync);
+    raw.killDry = f (P::killDry);     raw.soloBank = f (P::soloBank);     raw.testSignal = f (P::testSignal);     raw.preDelay = f (P::preDelay);   raw.preDelaySync = f (P::preDelaySync);
     raw.preDelayDiv = f (P::preDelayDiv); raw.decay = f (P::decay);     raw.size = f (P::size);
     raw.position = f (P::position);   raw.density = f (P::density);     raw.offset = f (P::offset);
     raw.temper = f (P::temper);       raw.noteWidth = f (P::noteWidth); raw.target = f (P::target);
@@ -57,6 +57,14 @@ void RoomXProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     wetBuf.setSize (2, preparedBlock, false, true, false);
     rawBuf.setSize (2, preparedBlock, false, true, false);
     engine.prepare (sampleRate, preparedBlock);
+    measBuf.assign ((size_t) (12.0 * sampleRate), 0.0f);   // alocação fora do áudio
+    measState.store (0);
+    measIdx = measFrom = 0;
+    testSample = 0;
+    cacheValid = false;
+    energy0.store (std::numeric_limits<float>::quiet_NaN());
+    energy1.store (std::numeric_limits<float>::quiet_NaN());
+    abTrimDb.store (0.0f);
 
     for (auto* s : { &inGainSm, &outGainSm, &dryGainSm, &wetGainSm })
         s->prepare (sampleRate, 25.0);
@@ -128,6 +136,94 @@ void RoomXProcessor::publishSequence()
 }
 
 // =============================================================================
+// ---- ruído rosa (Paul Kellett, filtro de 7 polos)
+float RoomXProcessor::nextPink() noexcept
+{
+    testSeed = testSeed * 1664525u + 1013904223u;
+    const float w = (float) (int32_t) testSeed * (1.0f / 2147483648.0f);
+    const float out = pink[0] + pink[1] + pink[2] + pink[3] + pink[4] + pink[5] + pink[6] + w * 0.5362f;
+    pink[0] = 0.99886f * pink[0] + w * 0.0555179f;
+    pink[1] = 0.99332f * pink[1] + w * 0.0750759f;
+    pink[2] = 0.96900f * pink[2] + w * 0.1538520f;
+    pink[3] = 0.86650f * pink[3] + w * 0.3104856f;
+    pink[4] = 0.55000f * pink[4] + w * 0.5329522f;
+    pink[5] = -0.7616f * pink[5] - w * 0.0168980f;
+    pink[6] = w * 0.115926f;
+    return out * 0.11f;
+}
+
+// ---- medição do RT60 ao vivo
+void RoomXProcessor::armRt60Measurement()
+{
+    // o impulso de teste exige o modo "Impulso"
+    if (auto* p = apvts.getParameter (roomx::params::testSignal))
+        p->setValueNotifyingHost (p->convertTo0to1 (1.0f));
+    measIdx = 0;
+    measFrom = 0;
+    measSlot = presets ? presets->activeSlot() : 0;   // a energia medida fica associada a este slot
+    cacheValid = false;
+    measState.store (1);
+}
+
+double RoomXProcessor::rt60Result() const
+{
+    if (measState.load() != 3) return -1.0;
+    if (cacheValid) return cachedRt60;
+
+    // integral inversa de Schroeder da energia da resposta
+    const int n = (int) measBuf.size();
+    std::vector<double> edc ((size_t) n + 1, 0.0);
+    for (int i = n - 1; i >= 0; --i)
+        edc[(size_t) i] = edc[(size_t) i + 1] + (double) measBuf[(size_t) i] * (double) measBuf[(size_t) i];
+    double result = -1.0;
+    if (edc[0] > 0.0)
+    {
+        // ajuste linear entre -5 e -25 dB; RT60 = -60 dB / declive
+        int i5 = -1, i25 = -1;
+        for (int i = 0; i < n; ++i)
+        {
+            const double db = 10.0 * std::log10 (edc[(size_t) i] / edc[0] + 1.0e-30);
+            if (i5 < 0 && db <= -5.0)  i5 = i;
+            if (i5 >= 0 && db <= -25.0) { i25 = i; break; }
+        }
+        if (i5 >= 0 && i25 - i5 >= 8)
+        {
+            const double fs = currentRate.load();
+            double sx = 0, sy = 0, sxx = 0, sxy = 0;
+            const int m = i25 - i5 + 1;
+            for (int i = i5; i <= i25; ++i)
+            {
+                const double t = i / fs;
+                const double y = 10.0 * std::log10 (edc[(size_t) i] / edc[0] + 1.0e-30);
+                sx += t; sy += y; sxx += t * t; sxy += t * y;
+            }
+            const double slope = (m * sxy - sx * sy) / (m * sxx - sx * sx);
+            if (slope < -1.0e-6)
+                result = -60.0 / slope;
+        }
+    }
+    // energia total da resposta, por slot (base da igualação A/B)
+    double sumSq = 0.0;
+    for (float v : measBuf) sumSq += (double) v * (double) v;
+    (measSlot == 0 ? energy0 : energy1).store ((float) (10.0 * std::log10 (sumSq + 1.0e-30)));
+
+    cachedRt60 = result;
+    cacheValid = true;
+    return result;
+}
+
+void RoomXProcessor::applyAbMatch() noexcept
+{
+    float trim = 0.0f;
+    if (abMatchOn.load() && presets != nullptr && presets->activeSlot() == 1)
+    {
+        const float e0 = energy0.load(), e1 = energy1.load();
+        if (std::isfinite (e0) && std::isfinite (e1))
+            trim = juce::jlimit (-12.0f, 12.0f, e0 - e1);   // B sobe ou desce até ao nível de A
+    }
+    abTrimDb.store (trim);
+}
+
 void RoomXProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
@@ -255,7 +351,7 @@ void RoomXProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiB
     const float mixAmt = juce::jlimit (0.0f, 1.0f, raw.mix->load() / 100.0f);
     const bool kill = raw.killDry->load() > 0.5f;
     inGainSm.setTarget (dsp::dbToGain (raw.input->load()));
-    outGainSm.setTarget (dsp::dbToGain (raw.output->load()));
+    outGainSm.setTarget (dsp::dbToGain (raw.output->load() + abTrimDb.load()));
     dryGainSm.setTarget (kill ? 0.0f : std::cos (mixAmt * juce::MathConstants<float>::halfPi));
     wetGainSm.setTarget (std::sin (mixAmt * juce::MathConstants<float>::halfPi));
     bypassTarget = raw.bypass->load() > 0.5f ? 1.0f : 0.0f;
@@ -292,6 +388,36 @@ void RoomXProcessor::processChunk (juce::AudioBuffer<float>& buffer, int start, 
         inPk[1] = juce::jmax (inPk[1], std::abs (dR[i]));
     }
 
+    // ---- sinal de teste: substitui a entrada por impulsos (periódicos ou o da medição) ou ruído rosa
+    const int testMode = (int) raw.testSignal->load();
+    int impulseAt = -1;
+    if (testMode == 0)
+        testSample = 0;
+    else
+    {
+        const int64_t period = (int64_t) (2.0 * currentRate.load());
+        // durante a medição (armado/a gravar) só há um impulso: os periódicos
+        // entrariam na resposta e o decaimento nunca desceria
+        const int ms = measState.load();
+        const bool periodicOk = (ms == 0 || ms == 3);
+        for (int i = 0; i < n; ++i)
+        {
+            float x = 0.0f;
+            if (testMode == 1)
+            {
+                if ((periodicOk && testSample % period == 0) || (ms == 1 && impulseAt < 0))
+                {
+                    x = 1.0f;
+                    if (impulseAt < 0) impulseAt = i;
+                }
+            }
+            else
+                x = 0.25f * nextPink();
+            dL[i] = dR[i] = x;
+            ++testSample;
+        }
+    }
+
     // bypass totalmente activo: cópia exacta da entrada (o motor descansa)
     if (bypassMix >= 1.0f && bypassTarget >= 1.0f)
     {
@@ -313,6 +439,27 @@ void RoomXProcessor::processChunk (juce::AudioBuffer<float>& buffer, int start, 
     }
     engineIdle = false;
     engine.process (dL, dR, wL, wR, n, ep);
+
+    // ---- medição do RT60: grava a resposta mono (pós-motor) a partir do impulso
+    {
+        int st = measState.load();
+        if (st == 1 && impulseAt >= 0)
+        {
+            measIdx = 0;
+            measFrom = impulseAt;
+            st = 2;
+            measState.store (2);
+        }
+        if (st == 2)
+        {
+            const int cap = (int) measBuf.size();
+            for (int i = measFrom; i < n && measIdx < cap; ++i)
+                measBuf[(size_t) measIdx++] = 0.5f * (wL[i] + wR[i]);
+            measFrom = 0;
+            if (measIdx >= cap)
+                measState.store (3);
+        }
+    }
 
     // análise (wet mono, pós-filtros)
     {

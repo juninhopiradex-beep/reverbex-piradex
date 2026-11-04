@@ -48,7 +48,7 @@ RoomXEditor::RoomXEditor (RoomXProcessor& p)
     for (juce::Component* c : std::initializer_list<juce::Component*> {
              &topBar, &spaceSel, &inputFader, &preDelay, &preDiv, &mix, &decay, &size, &preSync, &killDry, &mixLock,
              &noteScape, &target, &position, &density, &offset, &outputFader, &dualMono, &soloBank,
-             &spectrum, &noteMode, &notesLock, &manualPanel, &sequencePanel, &midiPanel, &bypass })
+             &spectrum, &noteMode, &notesLock, &manualPanel, &sequencePanel, &midiPanel, &bypass, &testSig, &measure, &abMatch })
         content.addAndMakeVisible (c);
     content.addChildComponent (login);
 
@@ -142,6 +142,18 @@ void RoomXEditor::applyLanguage()
     killDry.setTooltip (tr ("Remove o sinal seco (ideal em envio/aux)", "Removes the dry signal (ideal on a send/aux)"));
     dualMono.setTooltip (tr ("Esquerda e direita como dois espaços mono independentes", "Left and right as two independent mono spaces"));
     bypass.setTooltip (tr ("Ignorar o efeito (sem cliques)", "Bypass the effect (click-free)"));
+
+    testSig.setLabels ({ tr ("Desligado", "Off"), tr ("Impulso", "Impulse"), tr ("Ruído rosa", "Pink noise") });
+    measure.setTooltip (tr ("Dispara um impulso e mede o decaimento real do plugin (Schroeder)",
+                            "Fires an impulse and measures the plugin's real decay (Schroeder)"));
+    measure.onClick = [this] { proc.armRt60Measurement(); };
+
+    abMatch.setButtonText (tr ("Igualar A/B", "Match A/B"));
+    abMatch.setClickingTogglesState (true);
+    abMatch.setToggleState (proc.abMatch(), juce::dontSendNotification);
+    abMatch.setTooltip (tr ("Iguala o nível do slot B ao do A (aproximação pela energia da resposta medida em cada slot)",
+                            "Matches slot B's level to A (approximation from the measured response energy of each slot)"));
+    abMatch.onClick = [this] { proc.setAbMatch (abMatch.getToggleState()); };
 }
 
 void RoomXEditor::showCallout (std::unique_ptr<juce::Component> c, juce::Component& anchor)
@@ -242,6 +254,9 @@ void RoomXEditor::layoutContent()
     // ---- rodapé
     footer = { 0, kBaseH - 28, kBaseW, 28 };
     bypass.setBounds (footer.getRight() - 104, footer.getY() + 3, 90, 22);
+    testSig.setBounds (footer.getRight() - 336, footer.getY() + 3, 226, 22);
+    measure.setBounds (footer.getRight() - 448, footer.getY() + 3, 102, 22);
+    abMatch.setBounds (footer.getRight() - 560, footer.getY() + 3, 100, 22);
 
     login.setBounds (0, 0, kBaseW, kBaseH);
 }
@@ -294,7 +309,7 @@ void RoomXEditor::Content::paint (juce::Graphics& g)
         || std::abs (e.proc.apvts.getRawParameterValue (P::tuneCents)->load()) > 0.05f)
         right << "A4 " << juce::String (e.proc.apvts.getRawParameterValue (P::tuneRef)->load(), 1) << " Hz  ";
     g.setColour (col::warn);
-    g.drawText (right, f.withTrimmedRight (110), juce::Justification::centredRight);
+    g.drawText (right, f.withTrimmedRight (580), juce::Justification::centredRight);   // deixa espaço aos controlos do sinal de teste
 }
 
 void RoomXEditor::paint (juce::Graphics& g)
@@ -306,6 +321,21 @@ void RoomXEditor::paint (juce::Graphics& g)
 void RoomXEditor::timerCallback()
 {
     ++tickCount;
+
+    // estado da medição do RT60 no botão do rodapé
+    {
+        const int st = proc.rt60State();
+        if (st == 3)
+        {
+            const double r = proc.rt60Result();
+            measure.setButtonText (r > 0.0 ? "RT60 " + juce::String (r, 2) + " s" : tr ("sem decaimento", "no decay"));
+        }
+        else if (st == 1 || st == 2)
+            measure.setButtonText (tr ("A medir…", "Measuring…"));
+        else
+            measure.setButtonText (tr ("Medir RT60", "Measure RT60"));
+    }
+    proc.applyAbMatch();   // o trim de saída acompanha o slot activo
 
     // licença (ex.: beta expirou com o plugin aberto)
     lic::License::get().checkExpiry();

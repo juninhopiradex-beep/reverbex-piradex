@@ -82,6 +82,9 @@ private:
 
     // ---- rodapé
     roomx::ui::ParamToggle bypass { proc.apvts, roomx::params::bypass, "Bypass" };
+    roomx::ui::SegmentedChoice testSig { proc.apvts, roomx::params::testSignal, juce::StringArray { "Off", "Impulse", "Pink" } };
+    juce::TextButton measure;
+    juce::TextButton abMatch;
 
     roomx::ui::LoginOverlay login { accent };
     roomx::ui::LanguageBinder lang;      // idioma PT/EN (troca imediata)

@@ -42,6 +42,8 @@ private:
     void showPresetMenu();
     void showSaveMenu();
     void saveAs();
+    void searchPresets();                                  // caixa de pesquisa
+    void showSearchResults (const juce::String& term);     // lista filtrada por nome/banco
 };
 
 // ---------------------------------------------------------------------------

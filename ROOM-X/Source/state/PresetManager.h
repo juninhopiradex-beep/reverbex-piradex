@@ -50,6 +50,7 @@ public:
     int  currentIndex() const { return current; }
     juce::String currentName() const { return currentPresetName; }
     juce::String currentInfo() const;
+    juce::Array<int> search (const juce::String& term) const;   // índices cujo nome ou banco contém o termo
 
     bool load (int index);
     void loadNext();

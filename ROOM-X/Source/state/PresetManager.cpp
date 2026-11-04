@@ -62,6 +62,17 @@ void PresetManager::refresh()
         if (list[i].name == keepName) { current = i; break; }
 }
 
+juce::Array<int> PresetManager::search (const juce::String& term) const
+{
+    juce::Array<int> hits;
+    const auto t = term.trim();
+    if (t.isEmpty()) return hits;
+    for (int i = 0; i < list.size(); ++i)
+        if (list[i].name.containsIgnoreCase (t) || list[i].bank.containsIgnoreCase (t))
+            hits.add (i);
+    return hits;
+}
+
 juce::String PresetManager::currentInfo() const
 {
     return juce::isPositiveAndBelow (current, list.size()) ? list[current].info : juce::String();

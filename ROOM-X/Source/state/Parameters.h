@@ -34,6 +34,7 @@ inline constexpr const char* dualMono     = "dualMono";
 inline constexpr const char* soloBank     = "soloBank";
 inline constexpr const char* bypass       = "bypass";
 inline constexpr const char* eco          = "eco";
+inline constexpr const char* testSignal   = "testSignal";
 inline constexpr const char* noteMode     = "noteMode";
 inline constexpr const char* notes        = "notes";
 inline constexpr const char* midiOctave   = "midiOctave";

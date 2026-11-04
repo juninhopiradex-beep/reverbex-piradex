@@ -178,6 +178,41 @@ void TopBar::mouseDown (const juce::MouseEvent& e)
     if (presetBox.withTrimmedLeft (70.0f).contains (e.position)) showPresetMenu();
 }
 
+void TopBar::searchPresets()
+{
+    auto* w = new juce::AlertWindow (tr ("Pesquisar preset", "Search presets"),
+                                     tr ("Parte do nome ou do banco:", "Part of the name or bank:"),
+                                     juce::MessageBoxIconType::NoIcon, this);
+    w->addTextEditor ("term", "", "");
+    w->addButton (tr ("Pesquisar", "Search"), 1, juce::KeyPress (juce::KeyPress::returnKey));
+    w->addButton (tr ("Cancelar", "Cancel"), 0, juce::KeyPress (juce::KeyPress::escapeKey));
+    w->enterModalState (true, juce::ModalCallbackFunction::create ([this, w] (int r)
+    {
+        const juce::String term = w->getTextEditorContents ("term").trim();
+        delete w;                       // a janela é nossa: apaga-se depois de ler o texto
+        if (r == 1 && term.isNotEmpty()) showSearchResults (term);
+    }), false);
+}
+
+void TopBar::showSearchResults (const juce::String& term)
+{
+    const auto& list = presets.entries();
+    const auto hits = presets.search (term);
+    juce::PopupMenu m;
+    for (int k = 0; k < hits.size() && k < 80; ++k)
+    {
+        const int i = hits[k];
+        m.addItem (i + 1, list[i].name + "  ·  " + bankLabel (list[i].bank), true, i == presets.currentIndex());
+    }
+    if (hits.isEmpty())
+        m.addItem (1, tr ("Sem resultados", "No results"), false);
+    m.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea (localAreaToGlobal (presetBox.toNearestInt())).withMinimumWidth ((int) presetBox.getWidth()),
+                     [this] (int r)
+    {
+        if (r > 0) { presets.load (r - 1); repaint(); }
+    });
+}
+
 void TopBar::showPresetMenu()
 {
     const auto& list = presets.entries();
@@ -192,6 +227,7 @@ void TopBar::showPresetMenu()
                 sub.addItem (i + 1, list[i].name, true, i == presets.currentIndex());
         root.addSubMenu (bankLabel (b), sub);
     }
+    root.addItem (10005, tr ("Pesquisar preset…", "Search presets…"));
     root.addSeparator();
     root.addItem (10001, tr ("Guardar como…", "Save as…"));
     root.addItem (10002, tr ("Importar preset…", "Import preset…"));
@@ -202,6 +238,7 @@ void TopBar::showPresetMenu()
     {
         if (r <= 0) return;
         if (r <= 10000) { presets.load (r - 1); repaint(); return; }
+        if (r == 10005) { searchPresets(); return; }
         if (r == 10001) saveAs();
         if (r == 10002)
         {

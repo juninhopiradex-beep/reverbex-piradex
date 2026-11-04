@@ -8,6 +8,11 @@
 - Presets: +203 de fábrica (29 espaços × 7 atmosferas: Cinema, Nocturne, Shimmer, Shadow, Velvet, Metal, Mirror). Total: 263 de fábrica + 11 tutoriais.
 - Interface: o asterisco de preset alterado passa a "(alterado)"; "Escolher escala…" em destaque na cor do alvo; rodapé com texto maior; unidades com espaço (100 %, 1.0 x). Kill Dry movido para junto do MIX; "Escolher escala…" com destaque pelo sistema de cores do look-and-feel.
 - Interface: Dual Mono passa para o fundo da coluna do INPUT; legendas "BLOQ." nos cadeados de mistura e de notas; o RT60 mostrado é rotulado como "alvo" (decaimento nominal, não o medido).
+- Sinal de teste embutido (Desligado / Impulso / Ruído rosa), no rodapé, sem precisar de DAW.
+- RT60 medido ao vivo ("Medir RT60"): dispara um impulso e calcula o decaimento real da resposta (Schroeder, −5 a −25 dB). Validado: no espaço Aurora Hall mede 2,59 s contra 2,40 s de alvo.
+- Igualar A/B ("Match A/B"): o slot B recebe o trim de saída que o aproxima do A, pela energia da resposta medida em cada slot. É uma aproximação: meça cada slot primeiro.
+- Pesquisa de presets: "Pesquisar preset…" no menu, por nome ou banco.
+- Teste: Undo de carregamento de preset verificado; o Undo espera que as alterações do APVTS assentem (são assíncronas).
 - Medição: o custo de CPU do Offset (oscilador por rotação) não mudou de forma mensurável face a 2.0.0 (≈0,18 s por 60 s de áudio, antes e depois). A alteração mantém-se pela precisão e pela ausência de `sin`/`cos` por amostra, não por poupança de CPU.
 - Acessibilidade: cor de texto secundário (`textFaint`) ajustada para contraste WCAG AA (≥ 4,5:1) sobre o fundo e os painéis.
 - Testes: contagem de presets exata (falha se mudar); teste de Undo espera pela condição em vez de tempo fixo.

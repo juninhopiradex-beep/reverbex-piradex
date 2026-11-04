@@ -30,6 +30,17 @@ public:
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
     using AudioProcessor::processBlock;
 
+    // ---- medição do RT60 ao vivo (chamadas da mensagem)
+    void armRt60Measurement();           // dispara um impulso de teste e grava a resposta
+    int    rt60State() const noexcept { return measState.load(); }   // 0 parado, 1 armado, 2 a gravar, 3 pronto
+    double rt60Result() const;           // segundos (-1 se não houver decaimento válido)
+
+    // ---- igualar nível A/B: o slot B ganha o trim que o aproxima do A (energia da resposta medida)
+    void  setAbMatch (bool on) noexcept { abMatchOn.store (on); }
+    bool  abMatch() const noexcept      { return abMatchOn.load(); }
+    float abTrim() const noexcept       { return abTrimDb.load(); }
+    void  applyAbMatch() noexcept;       // mensagem: atualiza o trim conforme o slot activo
+
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }
 
@@ -84,7 +95,7 @@ private:
     // ponteiros para os valores crus dos parâmetros
     struct Raw
     {
-        std::atomic<float> *input, *output, *mix, *killDry, *soloBank, *preDelay, *preDelaySync, *preDelayDiv,
+        std::atomic<float> *input, *output, *mix, *killDry, *soloBank, *testSignal, *preDelay, *preDelaySync, *preDelayDiv,
                            *decay, *size, *position, *density, *offset, *temper, *noteWidth, *target,
                            *rangeLow, *rangeHigh, *lowCut, *lowCutSlope, *highCut, *highCutSlope,
                            *space, *dualMono, *bypass, *eco, *noteMode, *notes, *midiOctave, *midiRelease,
@@ -113,6 +124,22 @@ private:
     roomx::dsp::Smoother inGainSm, outGainSm, dryGainSm, wetGainSm;
     float bypassMix = 0.0f, bypassTarget = 0.0f, bypassStep = 0.001f;
     bool  engineIdle = false;
+
+    // sinal de teste e medição do RT60 ao vivo
+    std::atomic<int> measState { 0 };
+    std::vector<float> measBuf;          // ~12 s de resposta, pré-alocado
+    int measIdx = 0, measFrom = 0;
+    int64_t testSample = 0;
+    uint32_t testSeed = 0x2545F491u;
+    float pink[7] {};
+    float nextPink() noexcept;
+    mutable double cachedRt60 = -1.0;
+    mutable bool   cacheValid = false;
+    int measSlot = 0;
+    mutable std::atomic<float> energy0 { std::numeric_limits<float>::quiet_NaN() };   // energia (dB) medida no slot A
+    mutable std::atomic<float> energy1 { std::numeric_limits<float>::quiet_NaN() };   // energia (dB) medida no slot B
+    std::atomic<bool>  abMatchOn { false };
+    std::atomic<float> abTrimDb { 0.0f };
 
     // ValueTree::Listener / AsyncUpdater (sequência -> áudio)
     void valueTreePropertyChanged (juce::ValueTree&, const juce::Identifier&) override;
