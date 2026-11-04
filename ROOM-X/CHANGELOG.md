@@ -13,6 +13,8 @@
 - Igualar A/B ("Match A/B"): o slot B recebe o trim de saída que o aproxima do A, pela energia da resposta medida em cada slot. É uma aproximação: meça cada slot primeiro.
 - Pesquisa de presets: "Pesquisar preset…" no menu, por nome ou banco.
 - Teste: Undo de carregamento de preset verificado; o Undo espera que as alterações do APVTS assentem (são assíncronas).
+- Undo/Redo corrigido na origem: o APVTS só passa os parâmetros para a árvore de estado num Timer (10 Hz, até 500 ms parado), e o UndoManager só regista o que lá está. Um Undo logo a seguir a uma edição não a via, e dois gestos rápidos fundiam-se num passo. Agora a passagem é forçada antes de cada transação, de cada Undo/Redo e no fim de cada carregamento de preset, e a 30 Hz pelo editor. Testes estritos, sem esperas (50 repetições); com o flush desligado, os mesmos testes falham.
+- Teclado e leitor de ecrã: Tab percorre os controlos (knobs, faders, botões, selectores, pads de notas); setas mudam valores, Espaço/Enter acciona, Esc devolve o foco ao DAW. Os cliques do rato não roubam o foco, para a barra de espaço continuar a controlar o transporte do DAW. Todos os controlos têm título para o leitor de ecrã; os selectores e os pads de notas lêem o valor actual ("C, E, G"). Anel de foco na cor do alvo.
 - Medição: o custo de CPU do Offset (oscilador por rotação) não mudou de forma mensurável face a 2.0.0 (≈0,18 s por 60 s de áudio, antes e depois). A alteração mantém-se pela precisão e pela ausência de `sin`/`cos` por amostra, não por poupança de CPU.
 - Acessibilidade: cor de texto secundário (`textFaint`) ajustada para contraste WCAG AA (≥ 4,5:1) sobre o fundo e os painéis.
 - Testes: contagem de presets exata (falha se mudar); teste de Undo espera pela condição em vez de tempo fixo.

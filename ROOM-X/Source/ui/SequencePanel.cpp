@@ -34,6 +34,7 @@ SequencePanel::SequencePanel (Context& c, state::SequenceModel& model)
     armAtt = std::make_unique<APVTS::ButtonAttachment> (c.apvts, P::seqArmed, arm);
 
     gridBtn.getProperties().set ("fontSize", 14.0);
+    gridBtn.setTitle (tr ("Grelha", "Grid"));   // o texto (a divisão) só é posto no tick
     gridBtn.onClick = [this]
     {
         juce::PopupMenu m;
@@ -406,7 +407,7 @@ void SequencePanel::showRegionMenu (int index)
     m.addItem (3, tr ("Limpar a sequência", "Clear sequence"));
     m.showMenuAsync ({}, [this, index] (int r)
     {
-        ctx.undo().beginNewTransaction ("Sequence edit");
+        ctx.beginTransaction ("Sequence edit");
         if (r == 1 && juce::isPositiveAndBelow (index, (int) regs.size()))
         {
             auto list = regs;
@@ -465,7 +466,7 @@ void SequencePanel::mouseDown (const juce::MouseEvent& e)
     const int hit = regionAt (p);
     if (e.mods.isPopupMenu()) { selected = hit; repaint(); showRegionMenu (hit); return; }
 
-    ctx.undo().beginNewTransaction ("Sequence edit");
+    ctx.beginTransaction ("Sequence edit");
     if (hit >= 0)
     {
         selected = hit;
@@ -607,7 +608,7 @@ void SequencePanel::mouseDoubleClick (const juce::MouseEvent& e)
     const int hit = regionAt (e.position);
     if (hit >= 0 && gridArea.contains (e.position))
     {
-        ctx.undo().beginNewTransaction ("Delete region");
+        ctx.beginTransaction ("Delete region");
         seq.removeRegions ({ hit });
         selected = -1;
         reload();
@@ -634,7 +635,7 @@ bool SequencePanel::keyPressed (const juce::KeyPress& k)
 {
     if ((k == juce::KeyPress::deleteKey || k == juce::KeyPress::backspaceKey) && juce::isPositiveAndBelow (selected, (int) regs.size()))
     {
-        ctx.undo().beginNewTransaction ("Delete region");
+        ctx.beginTransaction ("Delete region");
         seq.removeRegions ({ selected });
         selected = -1;
         reload();

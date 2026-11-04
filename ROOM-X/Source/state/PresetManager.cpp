@@ -112,6 +112,8 @@ void PresetManager::apply (const juce::ValueTree& preset, bool respectLocks)
             || id == params::seqTranspose || id == params::seqOffset || id == params::midiOctave;
     };
 
+    // edições pendentes fecham na transação anterior (o APVTS só as passa num Timer)
+    (void) apvts.copyState();
     if (auto* um = apvts.undoManager) um->beginNewTransaction ("Load preset");
 
     for (auto* param : apvts.processor.getParameters())
@@ -141,6 +143,9 @@ void PresetManager::apply (const juce::ValueTree& preset, bool respectLocks)
         auto seq = preset.getChildWithName (ids::sequence);
         sequence.replaceWith (seq.isValid() ? seq : SequenceModel::toTree (music::SequenceData::makeDefault()));
     }
+
+    // os valores do preset entram já nesta transação, não quando o Timer do APVTS correr
+    (void) apvts.copyState();
 }
 
 void PresetManager::setLoaded (const juce::String& name, int index)

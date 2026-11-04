@@ -24,6 +24,15 @@ public:
     void mouseDrag (const juce::MouseEvent&) override;
     void mouseUp (const juce::MouseEvent&) override;
 
+    // teclado: ←/→ movem o cursor pelas 12 notas, Espaço/Enter liga/desliga a nota
+    bool keyPressed (const juce::KeyPress&) override;
+    void focusGained (FocusChangeType) override { repaint(); }
+    void focusLost (FocusChangeType) override   { repaint(); }
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+    juce::String selectionText() const;          // "C, E, G" para o leitor de ecrã
+    void toggleNote (int pc);
+    int cursor = 0;
+
 private:
     Context& ctx;
     ParamRef notes;

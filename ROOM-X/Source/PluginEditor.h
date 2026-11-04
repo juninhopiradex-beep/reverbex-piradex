@@ -23,6 +23,7 @@ public:
     ~RoomXEditor() override;
 
     void paint (juce::Graphics&) override;
+    void paintOverChildren (juce::Graphics&) override;   // anel de foco do teclado
     void resized() override;
     bool keyPressed (const juce::KeyPress&) override;
     void mouseDown (const juce::MouseEvent&) override;
@@ -92,6 +93,7 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> mixLockAtt, notesLockAtt;
     juce::Rectangle<int> leftPanel, rightPanel, lowerPanel, footer, tabsRow;
     int tickCount = 0;
+    juce::Component::SafePointer<juce::Component> lastFocused;   // para redesenhar o anel quando o foco muda
     bool wasLicensed = false;
 
     void layoutContent();

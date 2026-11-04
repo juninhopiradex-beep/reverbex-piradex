@@ -17,6 +17,9 @@ bool Context::useFlats() const           { return proc.useFlats(); }
 music::Tuning Context::tuning() const    { return proc.currentTuning(); }
 int  Context::noteMode() const           { return (int) apvts.getRawParameterValue (P::noteMode)->load(); }
 juce::UndoManager& Context::undo() const { return proc.undoManager; }
+void Context::beginTransaction (const juce::String& name) const { proc.beginUndoTransaction (name); }
+bool Context::undoAction() const         { return proc.undoAction(); }
+bool Context::redoAction() const         { return proc.redoAction(); }
 
 uint16_t Context::displayedPitchClasses() const
 {
@@ -97,6 +100,23 @@ RoomXEditor::RoomXEditor (RoomXProcessor& p)
     addMouseListener (this, true);
     setWantsKeyboardFocus (true);
 
+    // ---- teclado / acessibilidade
+    // O editor é o contentor do Tab. Os controlos só recebem o foco por Tab, nunca por
+    // clique: se um clique deixasse o foco num botão, a barra de espaço deixava de ir
+    // para o transporte do DAW e passava a carregar no botão.
+    setFocusContainerType (juce::Component::FocusContainerType::keyboardFocusContainer);
+    std::function<void (juce::Component&)> noClickFocus = [&noClickFocus] (juce::Component& c)
+    {
+        for (auto* ch : c.getChildren())
+        {
+            if (dynamic_cast<juce::Button*> (ch) != nullptr || dynamic_cast<juce::Slider*> (ch) != nullptr
+                || dynamic_cast<roomx::ui::SegmentedChoice*> (ch) != nullptr || dynamic_cast<roomx::ui::NotePads*> (ch) != nullptr)
+                ch->setMouseClickGrabsKeyboardFocus (false);
+            noClickFocus (*ch);
+        }
+    };
+    noClickFocus (*this);
+
     // ---- tamanho / escala
     const double scale = juce::jlimit (0.7, 1.5, (double) proc.apvts.state.getProperty (kUiScale, 0.9));
     setResizable (true, true);
@@ -129,6 +149,9 @@ void RoomXEditor::applyLanguage()
     for (auto& k : knobs) { k.k->title = tr (k.pt, k.en); k.k->repaint(); }
 
     target.caption = tr ("ALVO", "TARGET");
+    target.setTitle (tr ("Alvo", "Target"));
+    noteMode.setTitle (tr ("Modo de notas", "Note mode"));
+    testSig.setTitle (tr ("Sinal de teste", "Test signal"));
     target.setLabels ({ tr ("Inicial", "Early"), tr ("Tudo", "All"), tr ("Cauda", "Late") });
     noteMode.setLabels ({ "Manual", tr ("Sequência", "Sequence"), "MIDI" });
 
@@ -146,6 +169,7 @@ void RoomXEditor::applyLanguage()
     testSig.setLabels ({ tr ("Desligado", "Off"), tr ("Impulso", "Impulse"), tr ("Ruído rosa", "Pink noise") });
     measure.setTooltip (tr ("Dispara um impulso e mede o decaimento real do plugin (Schroeder)",
                             "Fires an impulse and measures the plugin's real decay (Schroeder)"));
+    measure.setButtonText (tr ("Medir RT60", "Measure RT60"));   // texto inicial (o Timer actualiza-o depois)
     measure.onClick = [this] { proc.armRt60Measurement(); };
 
     abMatch.setButtonText (tr ("Igualar A/B", "Match A/B"));
@@ -336,6 +360,16 @@ void RoomXEditor::timerCallback()
             measure.setButtonText (tr ("Medir RT60", "Measure RT60"));
     }
     proc.applyAbMatch();   // o trim de saída acompanha o slot activo
+    // os attachments do JUCE abrem transações no início de cada gesto sem passar por
+    // nós: passar os valores para a árvore a 30 Hz evita que um gesto rápido caia no seguinte
+    proc.flushParamsToState();
+
+    // o anel de foco acompanha o controlo focado
+    if (auto* f = juce::Component::getCurrentlyFocusedComponent(); f != lastFocused.getComponent())
+    {
+        lastFocused = f;
+        repaint();
+    }
 
     // licença (ex.: beta expirou com o plugin aberto)
     lic::License::get().checkExpiry();
@@ -386,17 +420,45 @@ void RoomXEditor::timerCallback()
 void RoomXEditor::mouseDown (const juce::MouseEvent&)
 {
     // cada gesto do utilizador = um passo de undo
-    proc.undoManager.beginNewTransaction();
+    proc.beginUndoTransaction();
+}
+
+void RoomXEditor::paintOverChildren (juce::Graphics& g)
+{
+    auto* f = juce::Component::getCurrentlyFocusedComponent();
+    if (f != nullptr && f != this && isParentOf (f) && f->isShowing())
+    {
+        g.setColour (accent.current);
+        g.drawRoundedRectangle (getLocalArea (f, f->getLocalBounds()).toFloat().expanded (3.0f), 6.0f, 2.0f);
+    }
 }
 
 bool RoomXEditor::keyPressed (const juce::KeyPress& k)
 {
     const auto mods = k.getModifiers();
-    if (mods.isCommandDown() && k.getKeyCode() == 'Z')
+
+    // primeiro Tab (nada focado ainda): o JUCE só move o foco a partir de um controlo
+    if (k.isKeyCode (juce::KeyPress::tabKey) && hasKeyboardFocus (false))
+        if (auto traverser = createKeyboardFocusTraverser())
+        {
+            const auto all = traverser->getAllComponents (this);
+            if (! all.empty())
+            {
+                (mods.isShiftDown() ? all.back() : all.front())->grabKeyboardFocus();
+                return true;
+            }
+        }
+    // Esc devolve o foco ao editor (as teclas voltam a ir para o DAW)
+    if (k.isKeyCode (juce::KeyPress::escapeKey) && ! hasKeyboardFocus (false) && hasKeyboardFocus (true))
     {
-        if (mods.isShiftDown()) proc.undoManager.redo(); else proc.undoManager.undo();
+        grabKeyboardFocus();
         return true;
     }
-    if (mods.isCommandDown() && k.getKeyCode() == 'Y') { proc.undoManager.redo(); return true; }
+    if (mods.isCommandDown() && k.getKeyCode() == 'Z')
+    {
+        if (mods.isShiftDown()) proc.redoAction(); else proc.undoAction();
+        return true;
+    }
+    if (mods.isCommandDown() && k.getKeyCode() == 'Y') { proc.redoAction(); return true; }
     return false;
 }

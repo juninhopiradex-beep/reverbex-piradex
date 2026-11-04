@@ -85,6 +85,7 @@ void SequenceModel::setRow (int i, const Harmony& h)
 {
     auto r = rowTree (i);
     if (! r.isValid()) return;
+    (void) apvts.copyState();   // edições de parâmetros pendentes fecham na transação anterior
     undo()->beginNewTransaction ("Sequence row");
     r.setProperty (ids::root, h.root, undo());
     r.setProperty (ids::cat,  (int) h.category, undo());

@@ -76,8 +76,8 @@ TopBar::TopBar (Context& c, state::PresetManager& pm) : ctx (c), presets (pm)
     ecoAtt = std::make_unique<APVTS::ButtonAttachment> (c.apvts, P::eco, eco);
     eco.onColour = juce::Colour (0xff7bd88f);
 
-    undo.onClick = [this] { ctx.undo().undo(); };
-    redo.onClick = [this] { ctx.undo().redo(); };
+    undo.onClick = [this] { ctx.undoAction(); };
+    redo.onClick = [this] { ctx.redoAction(); };
     prev.onClick = [this] { presets.loadPrevious(); repaint(); };
     next.onClick = [this] { presets.loadNext(); repaint(); };
     save.onClick = [this] { showSaveMenu(); };

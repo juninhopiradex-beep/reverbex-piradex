@@ -54,7 +54,7 @@ public:
     void resized() override;
     void paint (juce::Graphics&) override;
     void setLevels (float l, float r);   // picos lineares (chamar a ~30 Hz)
-    void setTitle (const juce::String& t) { title = t; repaint(); }
+    void setTitle (const juce::String& t) { title = t; slider.setTitle (t); repaint(); }
 
     juce::Slider slider;
 
@@ -75,7 +75,7 @@ class IconButton : public juce::Button
 public:
     IconButton (Icon i, const juce::String& tooltip = {});
     IconButton (Icon i, const char* pt, const char* en) : IconButton (i) { setTip (pt, en); }
-    void setTip (const char* pt, const char* en) { tipPt = pt; tipEn = en; }
+    void setTip (const char* pt, const char* en) { tipPt = pt; tipEn = en; setTitle (tr (pt, en)); }
     juce::String getTooltip() override { return tipPt != nullptr ? tr (tipPt, tipEn) : juce::Button::getTooltip(); }
     void paintButton (juce::Graphics&, bool over, bool down) override;
     void setIcon (Icon i) { icon = i; repaint(); }
@@ -117,6 +117,15 @@ public:
     std::function<juce::Colour (int)> colourForIndex;   // cor própria por segmento (Target)
     std::function<void (int)> onChange;
     juce::String caption;
+
+    // teclado e leitor de ecrã: setas mudam a opção, Espaço/Enter avança
+    bool keyPressed (const juce::KeyPress&) override;
+    void focusGained (FocusChangeType) override { repaint(); }
+    void focusLost (FocusChangeType) override   { repaint(); }
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+    juce::String currentLabel() const { return labels[index]; }
+    void selectIndex (int i);
+    void selectLabel (const juce::String& l) { selectIndex (labels.indexOf (l)); }
 
 private:
     juce::StringArray labels;

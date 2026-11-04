@@ -91,6 +91,60 @@ juce::String describeMask (uint16_t mask, bool flats)
 NotePads::NotePads (Context& c) : ctx (c), notes (c.apvts, P::notes)
 {
     setMouseCursor (juce::MouseCursor::PointingHandCursor);
+    setWantsKeyboardFocus (true);
+    setTitle ("Notes");
+}
+
+void NotePads::toggleNote (int pc)
+{
+    if (! juce::isPositiveAndBelow (pc, 12)) return;
+    const int mask = (int) notes.get();
+    notes.setOnce ((float) (mask ^ (1 << pc)));
+    if (ctx.noteMode() != (int) P::NoteMode::Manual)
+        ParamRef (ctx.apvts, P::noteMode).setOnce ((float) P::NoteMode::Manual);
+    repaint();
+    if (auto* h = getAccessibilityHandler())
+        h->notifyAccessibilityEvent (juce::AccessibilityEvent::valueChanged);
+}
+
+juce::String NotePads::selectionText() const
+{
+    const int mask = (int) notes.get();
+    juce::StringArray names;
+    for (int pc = 0; pc < 12; ++pc)
+        if ((mask >> pc) & 1)
+            names.add (juce::String::fromUTF8 (pitchName (pc, ctx.useFlats())));
+    return names.isEmpty() ? juce::String ("-") : names.joinIntoString (", ");
+}
+
+bool NotePads::keyPressed (const juce::KeyPress& k)
+{
+    if (k.getModifiers().isAnyModifierKeyDown()) return false;
+    if (k == juce::KeyPress::rightKey || k == juce::KeyPress::upKey)   { cursor = (cursor + 1) % 12;  repaint(); return true; }
+    if (k == juce::KeyPress::leftKey  || k == juce::KeyPress::downKey) { cursor = (cursor + 11) % 12; repaint(); return true; }
+    if (k == juce::KeyPress::spaceKey || k == juce::KeyPress::returnKey) { toggleNote (cursor); return true; }
+    return false;
+}
+
+namespace
+{
+// o leitor de ecrã lê as notas seleccionadas ("C, E, G")
+struct PadsValue final : juce::AccessibilityTextValueInterface
+{
+    explicit PadsValue (NotePads& p) : owner (p) {}
+    bool isReadOnly() const override                       { return true; }
+    juce::String getCurrentValueAsString() const override  { return owner.selectionText(); }
+    void setValueAsString (const juce::String&) override   {}
+    NotePads& owner;
+};
+}
+
+std::unique_ptr<juce::AccessibilityHandler> NotePads::createAccessibilityHandler()
+{
+    return std::make_unique<juce::AccessibilityHandler> (
+        *this, juce::AccessibilityRole::group,
+        juce::AccessibilityActions().addAction (juce::AccessibilityActionType::press, [this] { toggleNote (cursor); }),
+        juce::AccessibilityHandler::Interfaces { std::make_unique<PadsValue> (*this) });
 }
 
 juce::Rectangle<float> NotePads::padFor (int pc) const
@@ -149,6 +203,13 @@ void NotePads::paint (juce::Graphics& g)
         g.setColour (on ? col::text : col::textDim);
         g.setFont (on ? Fonts::title (17.0f) : Fonts::label (16.0f));
         g.drawText (juce::String::fromUTF8 (pitchName (pc, flats)), r.withTrimmedBottom (10.0f), juce::Justification::centred);
+    }
+
+    // cursor do teclado
+    if (hasKeyboardFocus (false))
+    {
+        g.setColour (ctx.accent.current);
+        g.drawRoundedRectangle (padFor (cursor).expanded (3.0f), 9.0f, 2.0f);
     }
 }
 

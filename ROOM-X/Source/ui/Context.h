@@ -42,6 +42,10 @@ struct Context
     uint16_t displayedPitchClasses() const;     // notas activas (Manual / Sequence / MIDI)
     int  noteMode() const;
     juce::UndoManager& undo() const;
+    // usar estes (e não undo() directamente): garantem que os parâmetros já estão na árvore
+    void beginTransaction (const juce::String& name = {}) const;
+    bool undoAction() const;
+    bool redoAction() const;
 };
 
 // Pinta um painel base com cantos suaves

@@ -262,22 +262,38 @@ static void testState()
     d.setStateInformation (mb3.getData(), (int) mb3.getSize());
     check (d.sequence.getNumRegions() == 4, "sessão sem sequência -> sequência por defeito");
 
-    // undo/redo de parâmetros
-    RoomXProcessor u;
-    u.undoManager.beginNewTransaction();
-    setParam (u, P::size, 150.0f);
-    pump (120);
-    u.undoManager.beginNewTransaction();
-    u.undoManager.undo();
-    // espera pela condição (até 3 s) em vez de um tempo fixo: sob carga o
-    // listener assíncrono do APVTS pode demorar mais do que 60 ms
-    bool restored = false;
-    for (int k = 0; k < 300 && ! restored; ++k)
+    // undo/redo de parâmetros — estrito: SEM esperas nem pump. A causa da falha
+    // intermitente era o APVTS só passar os parâmetros para a árvore num Timer
+    // (10 Hz, até 500 ms parado); os helpers forçam essa passagem.
     {
-        pump (10);
-        restored = std::abs (getParam (u, P::size) - 100.0f) < 0.5f;
+        RoomXProcessor u;
+        bool allOk = true;
+        for (int rep = 0; rep < 50; ++rep)          // 50 repetições: tem de ser determinístico
+        {
+            u.beginUndoTransaction();
+            setParam (u, P::size, 150.0f);
+            u.undoAction();
+            allOk &= std::abs (getParam (u, P::size) - 100.0f) < 0.5f;
+            u.redoAction();
+            allOk &= std::abs (getParam (u, P::size) - 150.0f) < 0.5f;
+            u.undoAction();
+            allOk &= std::abs (getParam (u, P::size) - 100.0f) < 0.5f;
+        }
+        check (allOk, "Undo/Redo repõe Size sem esperas (50 repetições)");
     }
-    check (restored, "Undo repõe Size");
+    // dois gestos seguidos sem intervalo ficam em passos de undo separados
+    {
+        RoomXProcessor u;
+        u.beginUndoTransaction ("size");
+        setParam (u, P::size, 150.0f);
+        u.beginUndoTransaction ("decay");
+        setParam (u, P::decay, 3.0f);
+        u.undoAction();
+        const bool step1 = std::abs (getParam (u, P::decay) - 1.0f) < 0.01f && std::abs (getParam (u, P::size) - 150.0f) < 0.5f;
+        u.undoAction();
+        const bool step2 = std::abs (getParam (u, P::size) - 100.0f) < 0.5f;
+        check (step1 && step2, "gestos rápidos seguidos = passos de undo separados");
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -296,18 +312,89 @@ static void testPresetUndo()
         p.presets->load (i);
         if (std::abs (getParam (p, P::space) - before) > 0.5f) other = i;
     }
+    // estrito: carregar e desfazer de seguida, sem esperas
     p.presets->load (0);
     p.presets->load (other);
-    pump (200);   // as alterações do APVTS chegam à árvore de estado de forma assíncrona
     const float after = getParam (p, P::space);
-    bool restored = false;
-    p.undoManager.undo();
-    for (int k = 0; k < 300 && ! restored; ++k)
+    p.undoAction();
+    const bool restored = std::abs (getParam (p, P::space) - before) < 0.5f;
+    p.redoAction();
+    const bool redone = std::abs (getParam (p, P::space) - after) < 0.5f;
+    check (other >= 0 && std::abs (after - before) > 0.5f && restored && redone,
+           "Undo/Redo do carregamento de preset sem esperas (espaço " + juce::String (before, 0) + " <-> " + juce::String (after, 0) + ")");
+}
+
+// -----------------------------------------------------------------------------
+// teclado e leitor de ecrã: todos os controlos alcançáveis por Tab, com título,
+// sem roubar o foco ao clique, e as teclas mudam mesmo os valores
+static void testAccessibility()
+{
+    std::printf ("[teclado e leitor de ecrã]\n");
+    RoomXProcessor p;
+    std::unique_ptr<juce::AudioProcessorEditor> ed (p.createEditor());
+    // getAccessibilityHandler() só devolve algo com uma janela nativa (e o xvfb, sem gestor
+    // de janelas, rejeita-a); o handler é criado directamente, que é o que o leitor de ecrã usa
+    check (ed->isKeyboardFocusContainer(), "o editor é o contentor do Tab");
+
+    int controls = 0;
+    juce::StringArray bad;
+    ui::NotePads* pads = nullptr;
+    std::function<void (juce::Component&)> walk = [&] (juce::Component& c)
     {
-        pump (10);
-        restored = std::abs (getParam (p, P::space) - before) < 0.5f;
+        for (auto* ch : c.getChildren())
+        {
+            if (auto* np = dynamic_cast<ui::NotePads*> (ch)) pads = np;
+            const bool interactive = dynamic_cast<juce::Button*> (ch) != nullptr || dynamic_cast<juce::Slider*> (ch) != nullptr
+                                  || dynamic_cast<ui::SegmentedChoice*> (ch) != nullptr || dynamic_cast<ui::NotePads*> (ch) != nullptr;
+            if (interactive)
+            {
+                ++controls;
+                const auto h = ch->createAccessibilityHandler();
+                const auto title = h != nullptr ? h->getTitle() : juce::String();
+                if (! ch->getWantsKeyboardFocus() || ch->getMouseClickGrabsKeyboardFocus() || h == nullptr || title.isEmpty())
+                    bad.add (juce::String (typeid (*ch).name()) + " em " + juce::String (typeid (c).name()) + " '" + title + "'");
+            }
+            walk (*ch);
+        }
+    };
+    walk (*ed);
+    if (! bad.isEmpty()) std::printf ("  sem foco/título: %s\n", bad.joinIntoString (" | ").toRawUTF8());
+    check (bad.isEmpty() && controls > 30,
+           juce::String (controls) + " controlos: focáveis por Tab, com título, sem roubar o foco ao clique");
+
+    auto traverser = ed->createKeyboardFocusTraverser();
+    const auto order = traverser->getAllComponents (ed.get());
+    check (order.size() >= 30, "Tab percorre " + juce::String ((int) order.size()) + " controlos");
+
+    // as teclas mudam mesmo os valores
+    {
+        ui::SegmentedChoice seg (p.apvts, P::target, { "E", "A", "L" }, true);
+        setParam (p, P::target, 1.0f);
+        seg.keyPressed (juce::KeyPress (juce::KeyPress::rightKey));
+        const bool r = std::abs (getParam (p, P::target) - 2.0f) < 0.01f;
+        seg.keyPressed (juce::KeyPress (juce::KeyPress::leftKey));
+        const bool l = std::abs (getParam (p, P::target) - 1.0f) < 0.01f;
+        check (r && l, "setas mudam o Target (selector segmentado)");
+        const auto h = seg.createAccessibilityHandler();
+        check (h != nullptr && h->getValueInterface() != nullptr && h->getValueInterface()->getCurrentValueAsString() == "A",
+               "o leitor de ecrã lê a opção do selector");
     }
-    check (other >= 0 && std::abs (after - before) > 0.5f && restored, "Undo desfaz o carregamento de preset (espaço " + juce::String (before, 0) + " ↔ " + juce::String (after, 0) + ")");
+    {
+        ui::Knob k (p.apvts, P::decay, "DECAY");
+        const float d0 = getParam (p, P::decay);
+        k.slider.keyPressed (juce::KeyPress (juce::KeyPress::upKey));
+        check (getParam (p, P::decay) > d0, "seta para cima sobe o Decay (knob)");
+    }
+    if (pads != nullptr)
+    {
+        const int before = (int) getParam (p, P::notes);
+        pads->cursor = 0;
+        pads->keyPressed (juce::KeyPress (juce::KeyPress::spaceKey));
+        const int after = (int) getParam (p, P::notes);
+        check (((before ^ after) & 1) == 1, "Espaço liga/desliga a nota sob o cursor (pads)");
+    }
+    else
+        check (false, "pads de notas encontrados no editor");
 }
 
 // -----------------------------------------------------------------------------
@@ -849,6 +936,7 @@ int main (int argc, char** argv)
     testRt60Live();
     testAbMatch();
     testPresetUndo();
+    testAccessibility();
     testRates();
     testLanguage();
     if (argc > 1) snapshots (juce::File (juce::String (argv[1])));

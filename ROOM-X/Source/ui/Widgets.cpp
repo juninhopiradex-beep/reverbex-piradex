@@ -16,6 +16,9 @@ Knob::Knob (APVTS& s, const juce::String& paramId, const juce::String& t, bool b
     slider.setVelocityModeParameters (0.4, 1, 0.0, true, juce::ModifierKeys::shiftModifier);
     slider.getProperties().set ("bipolar", bipolar);
     slider.setPopupDisplayEnabled (false, false, nullptr);
+    // teclado: alcançável por Tab, setas mudam o valor (o juce::Slider vem sem foco)
+    slider.setWantsKeyboardFocus (true);
+    slider.setTitle (t);
     addAndMakeVisible (slider);
     attachment = std::make_unique<APVTS::SliderAttachment> (s, paramId, slider);
     slider.setDoubleClickReturnValue (true, (double) param->convertFrom0to1 (param->getDefaultValue()));
@@ -55,6 +58,7 @@ void Knob::resized()
 
 void Knob::paint (juce::Graphics& g)
 {
+    if (slider.getTitle() != title) slider.setTitle (title);   // o leitor de ecrã acompanha o idioma
     g.setColour (col::textDim);
     g.setFont (Fonts::caps (13.0f, 0.08f));
     g.drawText (title, getLocalBounds().removeFromTop (titleHeight), juce::Justification::centred);
@@ -73,6 +77,8 @@ Fader::Fader (APVTS& s, const juce::String& paramId, const juce::String& t)
     slider.setSliderStyle (juce::Slider::LinearVertical);
     slider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
     slider.setVelocityModeParameters (0.4, 1, 0.0, true, juce::ModifierKeys::shiftModifier);
+    slider.setWantsKeyboardFocus (true);
+    slider.setTitle (t);
     addAndMakeVisible (slider);
     attachment = std::make_unique<APVTS::SliderAttachment> (s, paramId, slider);
     slider.setDoubleClickReturnValue (true, 0.0);
@@ -294,6 +300,8 @@ void IconButton::drawIcon (juce::Graphics& g, Icon icon, juce::Rectangle<float> 
 
 void IconButton::paintButton (juce::Graphics& g, bool over, bool down)
 {
+    // botão só com ícone: o título para o leitor de ecrã é a dica (no idioma actual)
+    if (const auto tip = getTooltip(); getTitle() != tip) setTitle (tip);
     auto r = getLocalBounds().toFloat();
     const bool on = getToggleState();
     const auto acc = ! onColour.isTransparent() ? onColour : (accent != nullptr ? accent->current : col::all);
@@ -336,10 +344,50 @@ SegmentedChoice::SegmentedChoice (APVTS& s, const juce::String& paramId, juce::S
             index = i;
             if (onChange) onChange (index);
             repaint();
+            if (auto* h = getAccessibilityHandler())
+                h->notifyAccessibilityEvent (juce::AccessibilityEvent::valueChanged);
         }
     }, s.undoManager);
     attachment->sendInitialUpdate();
     setMouseCursor (juce::MouseCursor::PointingHandCursor);
+    setWantsKeyboardFocus (true);
+}
+
+void SegmentedChoice::selectIndex (int i)
+{
+    if (juce::isPositiveAndBelow (i, labels.size()) && i != index)
+        attachment->setValueAsCompleteGesture ((float) i);
+}
+
+bool SegmentedChoice::keyPressed (const juce::KeyPress& k)
+{
+    if (k.getModifiers().isAnyModifierKeyDown() || labels.isEmpty()) return false;
+    if (k == juce::KeyPress::rightKey || k == juce::KeyPress::downKey) { selectIndex (juce::jmin (index + 1, labels.size() - 1)); return true; }
+    if (k == juce::KeyPress::leftKey  || k == juce::KeyPress::upKey)   { selectIndex (juce::jmax (index - 1, 0)); return true; }
+    if (k == juce::KeyPress::spaceKey || k == juce::KeyPress::returnKey) { selectIndex ((index + 1) % labels.size()); return true; }
+    return false;
+}
+
+namespace
+{
+// valor lido pelo leitor de ecrã: o nome da opção seleccionada
+struct SegmentValue final : juce::AccessibilityTextValueInterface
+{
+    explicit SegmentValue (SegmentedChoice& s) : owner (s) {}
+    bool isReadOnly() const override                            { return false; }
+    juce::String getCurrentValueAsString() const override       { return owner.currentLabel(); }
+    void setValueAsString (const juce::String& v) override      { owner.selectLabel (v); }
+    SegmentedChoice& owner;
+};
+}
+
+std::unique_ptr<juce::AccessibilityHandler> SegmentedChoice::createAccessibilityHandler()
+{
+    return std::make_unique<juce::AccessibilityHandler> (
+        *this, juce::AccessibilityRole::comboBox,
+        juce::AccessibilityActions().addAction (juce::AccessibilityActionType::press,
+                                                [this] { if (! labels.isEmpty()) selectIndex ((index + 1) % labels.size()); }),
+        juce::AccessibilityHandler::Interfaces { std::make_unique<SegmentValue> (*this) });
 }
 
 juce::Rectangle<float> SegmentedChoice::segment (int i) const

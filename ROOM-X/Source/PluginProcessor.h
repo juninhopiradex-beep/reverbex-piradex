@@ -41,6 +41,15 @@ public:
     float abTrim() const noexcept       { return abTrimDb.load(); }
     void  applyAbMatch() noexcept;       // mensagem: atualiza o trim conforme o slot activo
 
+    // ---- Undo/Redo (mensagem). O APVTS só passa os valores dos parâmetros para a
+    // árvore de estado num Timer (10 Hz, até 500 ms quando parado), e o UndoManager só
+    // regista o que já está na árvore. Sem forçar essa passagem, as edições caem na
+    // transação seguinte ou o Undo corre antes de elas existirem. copyState() força-a.
+    void flushParamsToState()                                  { (void) apvts.copyState(); }
+    void beginUndoTransaction (const juce::String& name = {}) { flushParamsToState(); undoManager.beginNewTransaction (name); }
+    bool undoAction()                                          { flushParamsToState(); return undoManager.undo(); }
+    bool redoAction()                                          { flushParamsToState(); return undoManager.redo(); }
+
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }
 
