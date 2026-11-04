@@ -7,6 +7,7 @@
 - Novo botão "Só banco" (*Solo Modal Bank*): ouve só a ressonância do banco modal, sem o sinal seco nem o reverb. Não altera presets nem sessões antigas (parâmetro novo, desligado por omissão).
 - Presets: +203 de fábrica (29 espaços × 7 atmosferas: Cinema, Nocturne, Shimmer, Shadow, Velvet, Metal, Mirror). Total: 263 de fábrica + 11 tutoriais.
 - Interface: o asterisco de preset alterado passa a "(alterado)"; "Escolher escala…" em destaque na cor do alvo; rodapé com texto maior; unidades com espaço (100 %, 1.0 x). Kill Dry movido para junto do MIX; "Escolher escala…" com destaque pelo sistema de cores do look-and-feel.
+- Interface: Dual Mono passa para o fundo da coluna do INPUT; legendas "BLOQ." nos cadeados de mistura e de notas; o RT60 mostrado é rotulado como "alvo" (decaimento nominal, não o medido).
 - Medição: o custo de CPU do Offset (oscilador por rotação) não mudou de forma mensurável face a 2.0.0 (≈0,18 s por 60 s de áudio, antes e depois). A alteração mantém-se pela precisão e pela ausência de `sin`/`cos` por amostra, não por poupança de CPU.
 - Acessibilidade: cor de texto secundário (`textFaint`) ajustada para contraste WCAG AA (≥ 4,5:1) sobre o fundo e os painéis.
 - Testes: contagem de presets exata (falha se mudar); teste de Undo espera pela condição em vez de tempo fixo.

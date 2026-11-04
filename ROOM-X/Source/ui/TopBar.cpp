@@ -292,7 +292,8 @@ void SpaceSelector::paint (juce::Graphics& g)
     const float rt = dsp::ReverbEngine::effectiveRt60 (idx, decay.get(), size.get() / 100.0f);
     g.setColour (col::textDim);
     g.setFont (Fonts::label (14.0f));
-    g.drawText (juce::String (rt, rt < 10.0f ? 2 : 1) + " s", t.removeFromRight (64.0f), juce::Justification::centredRight);
+    // o valor mostrado é o ALVO (decaimento nominal), não o medido: rotulado como tal
+    g.drawText (tr ("alvo ", "target ") + juce::String (rt, rt < 10.0f ? 2 : 1) + " s", t.removeFromRight (104.0f), juce::Justification::centredRight);
     g.setColour (col::text);
     g.setFont (Fonts::label (16.0f));
     g.drawText (s.name, t, juce::Justification::centred);

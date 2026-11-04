@@ -190,7 +190,10 @@ void RoomXEditor::layoutContent()
 
     {
         auto r = leftPanel.reduced (10, 12);
-        inputFader.setBounds (r.removeFromLeft (64));
+        // coluna do INPUT: o Dual Mono fica no fundo da coluna, junto ao fader de entrada
+        auto inCol = r.removeFromLeft (64);
+        inputFader.setBounds (inCol.withTrimmedBottom (30));
+        dualMono.setBounds (inCol.removeFromBottom (24).withSizeKeepingCentre (76, 22));
         r.removeFromLeft (8);
         const int cw = r.getWidth() / 2, rh = 128;
         auto row1 = r.removeFromTop (rh), row2 = r.removeFromTop (rh);
@@ -222,8 +225,7 @@ void RoomXEditor::layoutContent()
         offset.setBounds (row2.reduced (6, 0));
         r.removeFromTop (14);
         auto row3 = r.removeFromTop (30);
-        soloBank.setBounds (row3.removeFromLeft (cw).withSizeKeepingCentre (96, 28));
-        dualMono.setBounds (row3.withSizeKeepingCentre (110, 28));
+        soloBank.setBounds (row3.withSizeKeepingCentre (110, 28));
     }
 
     // ---- espectro
@@ -264,6 +266,12 @@ void RoomXEditor::Content::paint (juce::Graphics& g)
     g.drawText (tr ("SELECÇÃO DE NOTAS", "NOTE SELECTION"), e.tabsRow.withRight (e.notesLock.getX() - 12), juce::Justification::centredRight);
     g.drawText (e.ctx.noteMode() == 1 ? tr ("SEGUE O TRANSPORTE DO DAW", "FOLLOWS THE DAW TRANSPORT") : (e.ctx.noteMode() == 2 ? tr ("TOQUE NOTAS OU ACORDES", "PLAY NOTES OR CHORDS") : tr ("ESCOLHA AS NOTAS", "PICK THE NOTES")),
                 e.tabsRow.withLeft (e.noteMode.getRight() + 12), juce::Justification::centredLeft);
+
+    // legendas dos cadeados (antes só havia o ícone)
+    g.setColour (col::textFaint);
+    g.setFont (Fonts::caps (9.5f, 0.06f));
+    g.drawText (tr ("BLOQ.", "LOCK"), juce::Rectangle<int> (e.mixLock.getX() - 6, e.mixLock.getBottom() - 4, e.mixLock.getWidth() + 12, 12), juce::Justification::centred);
+    g.drawText (tr ("BLOQ.", "LOCK"), juce::Rectangle<int> (e.notesLock.getX() - 6, e.notesLock.getBottom() - 4, e.notesLock.getWidth() + 12, 12), juce::Justification::centred);
 
     // rodapé
     g.setColour (juce::Colour (0xff0a0b0e));
