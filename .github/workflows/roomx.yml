@@ -262,6 +262,9 @@ jobs:
       contents: write
     env:
       GH_TOKEN: ${{ github.token }}
+    defaults:
+      run:
+        working-directory: .
     steps:
       - uses: actions/checkout@v4
 
