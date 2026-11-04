@@ -13,7 +13,7 @@ defaults:
     working-directory: ROOM-X
 
 env:
-  VERSAO: "2.0.0"
+  VERSAO: "2.0.1"
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -252,6 +252,8 @@ jobs:
 
   # ---------------------------------------------------------------------------
   publicar:
+    # só publica a release a partir do main; builds noutros branches ficam como artefactos
+    if: github.ref == 'refs/heads/main'
     needs: [macos, windows, testes-plugin]
     runs-on: ubuntu-latest
     permissions:
