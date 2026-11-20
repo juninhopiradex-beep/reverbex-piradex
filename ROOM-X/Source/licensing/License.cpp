@@ -126,7 +126,44 @@ void LocalPasswordLicenseProvider::setUnlocked (const KeyEntry& k)
 {
     currentKey  = &k;
     currentKind = k.kind;
+    online.store (false);
     unlocked.store (true);
+}
+
+void LocalPasswordLicenseProvider::setUnlockedOnline()
+{
+    currentKey  = nullptr;
+    currentKind = pcc.role() == "master" ? Kind::Master : Kind::Beta;
+    online.store (true);
+    unlocked.store (true);
+}
+
+Result LocalPasswordLicenseProvider::applyOnline (const piradex::pcc::Check& c, bool remember)
+{
+    if (c.outcome != piradex::pcc::Outcome::Ok)
+    {
+        lastOnline = piradex::pcc::uiText (c, ! piradex::i18n::isPortuguese());
+        return Result::Online;
+    }
+    pcc.commit (c, remember, *props);
+    props->removeValue ("key"); props->removeValue ("token"); props->saveIfNeeded();
+    setUnlockedOnline();
+    return Result::Ok;
+}
+
+bool LocalPasswordLicenseProvider::claimOnlineRecheck()
+{
+    const auto now = piradex::pcc::unixNow();
+    if (! online.load() || ! piradex::pcc::enabled() || now - lastRecheckTry.load() < 3600) return false;   // sem rede: tenta de hora a hora
+    if (now - props->getValue ("pccCheck").getLargeIntValue() < (juce::int64) pq::pcc::kRecheckHours * 3600) return false;
+    lastRecheckTry.store (now);
+    return true;
+}
+
+void LocalPasswordLicenseProvider::revalidateOnline()
+{
+    if (pcc.revalidate (*props) == piradex::pcc::Session::Recheck::Revoked)
+        juce::MessageManager::callAsync ([] { License::get().lock(); });
 }
 
 void LocalPasswordLicenseProvider::tryAutoUnlock()
@@ -140,6 +177,7 @@ void LocalPasswordLicenseProvider::tryAutoUnlock()
             setUnlocked (k);
             return;
         }
+    if (! unlocked.load() && pcc.restore (*props)) setUnlockedOnline();   // chave de licença (PCC) lembrada neste computador
 }
 
 int LocalPasswordLicenseProvider::matchPassword (const juce::String& password, bool& expired) const
@@ -182,6 +220,8 @@ Result LocalPasswordLicenseProvider::applyMatch (int index, bool expired, bool r
 void LocalPasswordLicenseProvider::lock()
 {
     unlocked.store (false);
+    online.store (false);
+    pcc.clear (*props);
     currentKind = Kind::None;
     currentKey = nullptr;
     props->removeValue ("key");
@@ -197,10 +237,19 @@ void LocalPasswordLicenseProvider::checkExpiry()
 {
     if (unlocked.load() && currentKey != nullptr && isExpired (*currentKey))
         lock();
+    if (unlocked.load() && online.load() && ! pcc.stillGood())
+        lock();                                         // licença online expirou ou ficou 14 dias sem validar
 }
 
 juce::String LocalPasswordLicenseProvider::statusText() const
 {
+    if (unlocked.load() && online.load())
+    {
+        const auto e = pcc.expires(); int y = 0, m = 0, d = 0;
+        if (currentKind == Kind::Master || ! pq::pcc::parseDate (e, y, m, d)) return piradex::i18n::tr ("Licença completa", "Full license");
+        return piradex::i18n::tr ("LICENÇA · válida até ", "LICENCE · valid until ")
+             + juce::String (d).paddedLeft ('0', 2) + "/" + juce::String (m).paddedLeft ('0', 2) + "/" + juce::String (y);
+    }
     if (! unlocked.load() || currentKey == nullptr) return {};
     if (currentKind == Kind::Master) return piradex::i18n::tr ("Licença completa", "Full license");
     return piradex::i18n::tr ("BETA · válida até ", "BETA · valid until ")

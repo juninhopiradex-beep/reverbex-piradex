@@ -13,7 +13,7 @@ defaults:
     working-directory: ROOM-X
 
 env:
-  VERSAO: "2.0.0"
+  VERSAO: "2.1.0"
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -278,4 +278,4 @@ jobs:
           echo "$FICHEIROS"
           gh release create "$TAG" $FICHEIROS -R "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" --title "ROOM-X by Piradex $VERSAO" \
-            --notes "Interface em Português e Inglês (Info › Idioma). macOS (10.13+, Intel e Apple Silicon, AU + VST3): ROOM-X-by-Piradex-$VERSAO-macOS.dmg · Windows 10/11 64 bits (VST3): ROOM-X-by-Piradex-$VERSAO-Windows-Setup.exe (ou o .zip para instalação manual) · AAX (Pro Tools): ficheiros *-AAX-*.zip, ver LEIA-ME-AAX.txt."
+            --notes "Novo na 2.1.0: chaves de licença validadas online (PCC); a master e as senhas beta continuam a funcionar como antes. Interface em Português e Inglês (Info › Idioma). macOS (10.13+, Intel e Apple Silicon, AU + VST3): ROOM-X-by-Piradex-$VERSAO-macOS.dmg · Windows 10/11 64 bits (VST3): ROOM-X-by-Piradex-$VERSAO-Windows-Setup.exe (ou o .zip para instalação manual) · AAX (Pro Tools): ficheiros *-AAX-*.zip, ver LEIA-ME-AAX.txt."

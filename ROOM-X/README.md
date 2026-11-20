@@ -1,6 +1,6 @@
 # ROOM-X by Piradex
 
-Reverb modal musical para **macOS (AU + VST3 + AAX, Universal 2: Intel + Apple Silicon, 10.13+)** e **Windows 10/11 (VST3 + AAX x64)**. Interface em **Português e Inglês**. JUCE 8 / C++17. Versão **2.0.0**.
+Reverb modal musical para **macOS (AU + VST3 + AAX, Universal 2: Intel + Apple Silicon, 10.13+)** e **Windows 10/11 (VST3 + AAX x64)**. Interface em **Português e Inglês**. JUCE 8 / C++17. Versão **2.1.0**.
 
 Uma reverb de estúdio premium cujo campo ressonante se afina por **notas, acordes, escalas, sequências harmónicas ou MIDI ao vivo**. O **Tempero** realça (+) ou escava (−) essas ressonâncias; o **Target** decide se actua nas reflexões iniciais (**EARLY**, coral), em tudo (**ALL**, teal) ou na cauda (**LATE**, azul eléctrico) — e o acento da interface muda de cor com ele.
 
@@ -31,14 +31,16 @@ O código não contém senhas — só *salt* + hash PBKDF2-HMAC-SHA256 (60 000 i
 python3 tools/generate_beta_password.py 2027-03-31        # BETA válida até essa data
 python3 tools/generate_beta_password.py --master          # MASTER
 ```
-Cola a linha impressa em `kKeys` (`Source/licensing/License.cpp`) e faz push — o GitHub compila. Nunca escrevas senhas em ficheiros do repositório. A licença está atrás de `ILicenseProvider`, pronta para uma futura conta Beatfreak na nuvem.
+Cola a linha impressa em `kKeys` (`Source/licensing/License.cpp`) e faz push — o GitHub compila. Nunca escrevas senhas em ficheiros do repositório. A licença está atrás de `ILicenseProvider`.
+
+**Chaves de licença (PCC, desde a 2.1.0):** no mesmo campo aceita-se uma chave `RMX-XXXX-XXXX-XXXX`, validada online no PCC (Supabase). Criar chaves no SQL Editor do PCC: `select * from pcc_new_roomx_license('Nome','email','País','venda', null);`. A chave em claro nunca sai do computador (vai `sha256(CHAVE|ROOM-X)`), a resposta é assinada (Ed25519) e verificada com a chave pública embebida no build. Código: `Source/licensing/pcc/`.
 
 ## Compilar
 O GitHub Actions (`.github/workflows/roomx.yml`) compila tudo a cada push que mexa em `ROOM-X/`:
 - testes DSP + testes do plugin (com capturas da interface),
 - **macOS**: AU + VST3 Universal 2, verificação `lipo` e macOS mínimo 10.13, `auval` (Apple Silicon e Intel/Rosetta), pluginval, `.pkg` + `.dmg`,
 - **Windows**: VST3 x64 sem dependência do VC++ Redistributable, pluginval, instalador Inno Setup + `.zip`,
-- publica a versão `roomx-v2.0.0` com o `.dmg`, o `Setup.exe`, o `.zip` e os `.zip` AAX.
+- publica a versão `roomx-v2.1.0` com o `.dmg`, o `Setup.exe`, o `.zip` e os `.zip` AAX.
 
 Localmente:
 ```
@@ -57,8 +59,8 @@ O AAX é compilado no GitHub Actions para macOS (Universal 2) e Windows x64 — 
 O Pro Tools normal só carrega plugins AAX **assinados pela PACE** (`wraptool`, conta PACE/iLok). Sem essas credenciais, o CI publica `...-AAX-nao-assinado.zip`, que só abre no *Pro Tools Developer*. Para assinar automaticamente, adiciona nos *Secrets* do repositório: `PACE_ACCOUNT`, `PACE_PASSWORD`, `PACE_WCGUID`, `PACE_EDEN_URL` (instalador Mac das ferramentas Eden) e, para Windows, `PACE_EDEN_WIN_URL`, `PACE_KEYFILE_B64`, `PACE_KEYPASSWORD`. A partir daí sai `...-AAX-assinado.zip`.
 
 ## Instalação
-- **macOS**: abrir o `.dmg` → `ROOM-X by Piradex 2.0.0.pkg` (VST3 em `/Library/Audio/Plug-Ins/VST3`, AU em `/Library/Audio/Plug-Ins/Components`). No Logic, para o modo MIDI carregue-o como *MIDI-controlled Effect*.
-- **Windows**: `ROOM-X-by-Piradex-2.0.0-Windows-Setup.exe` instala em `C:\Program Files\Common Files\VST3`. Sem assinatura digital paga, o Windows pode mostrar "O Windows protegeu o seu PC": **Mais informações → Executar mesmo assim**.
+- **macOS**: abrir o `.dmg` → `ROOM-X by Piradex 2.1.0.pkg` (VST3 em `/Library/Audio/Plug-Ins/VST3`, AU em `/Library/Audio/Plug-Ins/Components`). No Logic, para o modo MIDI carregue-o como *MIDI-controlled Effect*.
+- **Windows**: `ROOM-X-by-Piradex-2.1.0-Windows-Setup.exe` instala em `C:\Program Files\Common Files\VST3`. Sem assinatura digital paga, o Windows pode mostrar "O Windows protegeu o seu PC": **Mais informações → Executar mesmo assim**.
 - Presets do utilizador: `~/Music/Piradex/ROOM-X/User Presets` (Mac) · `Documentos\Piradex\ROOM-X\User Presets` (Windows).
 
 ## Estrutura

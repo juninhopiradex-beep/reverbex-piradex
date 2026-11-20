@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(RoomXByPiradex VERSION 2.0.0)
+project(RoomXByPiradex VERSION 2.1.0)
 
 # -----------------------------------------------------------------------------
 #  ROOM-X by Piradex — reverb modal musical (AU + VST3 macOS, VST3 Windows)
@@ -98,6 +98,11 @@ target_compile_definitions(RoomX PUBLIC
     ROOMX_VERSION_STRING="${PROJECT_VERSION}")
 
 # MSVC: ler o código-fonte como UTF-8 (textos em português)
+# PCC (Plugin Control Central): chaves de licença validadas online, mesma infraestrutura de todos os plugins Piradex
+set(PIRADEX_PCC_URL "https://ejjeittwyjttmevhajxo.supabase.co" CACHE STRING "URL do projeto Supabase do PCC")
+set(PIRADEX_PCC_PUBKEY "064c37512051906b9c8f1a9dfc962e9a1cd4c9f5b0f44ce66a12842b8e70a868" CACHE STRING "Chave pública Ed25519 do PCC (64 hex)")
+target_compile_definitions(RoomX PUBLIC PIRADEX_PCC_URL="${PIRADEX_PCC_URL}" PIRADEX_PCC_PUBKEY="${PIRADEX_PCC_PUBKEY}" PIRADEX_PCC_VERSION="${PROJECT_VERSION}")
+
 if(MSVC)
     target_compile_options(RoomX PRIVATE /utf-8)
 endif()

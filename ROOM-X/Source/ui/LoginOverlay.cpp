@@ -130,13 +130,16 @@ void LoginOverlay::submit()
     {
         bool expired = false;
         const int idx = lic::License::get().matchPassword (pw, expired);
-        juce::MessageManager::callAsync ([idx, expired, rem, flag, safe]
+        piradex::pcc::Check online;                                       // chave de licença: pergunta ao PCC
+        if (idx < 0 && ! expired) online = lic::License::get().checkOnline (pw);
+        juce::MessageManager::callAsync ([idx, expired, rem, flag, safe, online]
         {
             if (! flag->load() || safe == nullptr) return;
             auto& self = *safe;
             self.busy = false;
             self.enter.setEnabled (true);
-            const auto r = lic::License::get().applyMatch (idx, expired, rem);
+            const auto r = online.outcome != piradex::pcc::Outcome::Disabled ? lic::License::get().applyOnline (online, rem)
+                                                                             : lic::License::get().applyMatch (idx, expired, rem);
             if (r == lic::Result::Ok)
             {
                 lic::License::registerSuccess();
@@ -148,7 +151,7 @@ void LoginOverlay::submit()
             lic::License::registerFailure();
             self.password.selectAll();
             self.message.setColour (juce::Label::textColourId, col::danger);
-            self.message.setText (r == lic::Result::Expired ? tr ("Esta senha BETA já expirou.", "This BETA password has expired.") : tr ("Senha incorrecta.", "Incorrect password."),
+            self.message.setText (r == lic::Result::Online ? lic::License::get().onlineText() : r == lic::Result::Expired ? tr ("Esta senha BETA já expirou.", "This BETA password has expired.") : tr ("Senha incorrecta.", "Incorrect password."),
                                   juce::dontSendNotification);
             int s = 0;
             if (! lic::License::canAttempt (s)) { self.enter.setEnabled (false); self.startTimer (500); }

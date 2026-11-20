@@ -22,11 +22,12 @@
 #include <juce_cryptography/juce_cryptography.h>
 #include <atomic>
 #include <memory>
+#include "pcc/PccSession.h"
 
 namespace roomx::lic
 {
 enum class Kind { None, Master, Beta };
-enum class Result { Ok, Wrong, Expired, TooManyAttempts };
+enum class Result { Ok, Wrong, Expired, TooManyAttempts, Online };   // Online: o PCC recusou ou não respondeu
 
 struct KeyEntry
 {
@@ -51,6 +52,13 @@ public:
     virtual Result       applyMatch (int index, bool expired, bool remember) = 0;
     virtual void         lock() = 0;
     virtual void         checkExpiry() = 0;
+
+    // Chave de licença online (PCC): checkOnline numa thread de fundo, applyOnline na thread de mensagens.
+    virtual piradex::pcc::Check checkOnline (const juce::String&) const { return {}; }
+    virtual Result       applyOnline (const piradex::pcc::Check&, bool) { return Result::Wrong; }
+    virtual juce::String onlineText() const { return {}; }
+    virtual bool         claimOnlineRecheck() { return false; }   // barato: true = lançar revalidateOnline() agora
+    virtual void         revalidateOnline() {}                    // fundo, no máximo 1x/dia
 };
 
 // ---------------------------------------------------------------------------
@@ -75,6 +83,11 @@ public:
     Result       applyMatch (int index, bool expired, bool remember) override;
     void         lock() override;
     void         checkExpiry() override;
+    piradex::pcc::Check checkOnline (const juce::String& password) const override { return pcc.check (password); }
+    Result       applyOnline (const piradex::pcc::Check& c, bool remember) override;
+    juce::String onlineText() const override { return lastOnline; }
+    bool         claimOnlineRecheck() override;
+    void         revalidateOnline() override;
 
     // Funções puras (testáveis)
     static juce::MemoryBlock pbkdf2 (const juce::String& password, const juce::MemoryBlock& salt, int iterations, int dkLen);
@@ -92,12 +105,17 @@ public:
 private:
     void tryAutoUnlock();
     void setUnlocked (const KeyEntry& k);
+    void setUnlockedOnline();
     static juce::String tokenFor (const KeyEntry& k);
 
     std::unique_ptr<juce::PropertiesFile> props;
     std::atomic<bool> unlocked { false };
     Kind currentKind = Kind::None;
     const KeyEntry* currentKey = nullptr;
+    piradex::pcc::Session pcc { "ROOM-X", PIRADEX_PCC_VERSION };
+    std::atomic<bool> online { false };
+    std::atomic<juce::int64> lastRecheckTry { 0 };
+    juce::String lastOnline;
 };
 
 // ---------------------------------------------------------------------------

@@ -297,6 +297,8 @@ void RoomXEditor::timerCallback()
 
     // licença (ex.: beta expirou com o plugin aberto)
     lic::License::get().checkExpiry();
+    if (lic::License::get().claimOnlineRecheck())                    // licença online: revalida no PCC 1x por dia
+        juce::Thread::launch ([] { lic::License::get().revalidateOnline(); });
     const bool lic = lic::License::get().isUnlocked();
     if (lic != wasLicensed)
     {

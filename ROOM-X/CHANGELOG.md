@@ -1,5 +1,8 @@
 # Changelog — ROOM-X by Piradex
 
+## 2.1.0 — 2026-11-20
+- **Chaves de licença online (PCC)**: no ecrã de senha também se pode escrever uma chave `RMX-XXXX-XXXX-XXXX`, validada no PCC (Plugin Control Central). Fica presa ao primeiro computador que a ativar, funciona 14 dias sem internet e é revalidada no máximo 1 vez por dia; desativada no PCC, deixa de abrir o plugin. A senha master e as senhas beta continuam offline, como antes.
+
 ## 2.0.0 — 2026-10-17
 - Interface em **Português e Inglês**: seletor PT | EN em *Info › Idioma* e no ecrã de senha; troca imediata, sem reabrir o plugin. Na primeira abertura segue o idioma do sistema. A escolha é comum a todos os plugins Piradex (`Piradex.settings`). Os nomes de automação no DAW não mudam — sessões antigas abrem iguais.
 - Formato **AAX** (Pro Tools) para macOS e Windows.
