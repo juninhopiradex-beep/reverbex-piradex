@@ -118,7 +118,7 @@ static void testLicensing()
         namespace pc = piradex::pcc;
         check (pc::enabled(), "PCC ligado no build (URL + chave pública)");
         check (pc::looksLikeKey ("RMX-AB12-CD34-EF56") && pc::looksLikeKey (" rmx-ab12-cd34-ef56 "), "formato de chave reconhecido (espaços e minúsculas aceites)");
-        check (! pc::looksLikeKey ("#Tecnico01") && ! pc::looksLikeKey ("RMX-AB12-CD34"), "senhas normais não vão ao PCC");
+        check (! pc::looksLikeKey ("#SenhaNormal1") && ! pc::looksLikeKey ("RMX-AB12-CD34"), "senhas normais não vão ao PCC");
         check (pq::pcc::keyHashOf (pc::normaliseKey ("rmx-ab12-cd34-ef56").toStdString(), "ROOM-X") == "291375f084d9c0460bb86cde345d6048517ef7ab8931c661306565d8286a4184", "hash da chave igual ao que o servidor calcula");
         {
             const auto f = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("pcc_test.settings");

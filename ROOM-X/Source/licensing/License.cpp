@@ -12,8 +12,8 @@ namespace roomx::lic
 static const KeyEntry kKeys[] =
 {
     { "master", Kind::Master,
-      "f1dc2212d9b8fea34f372dc16c2133de",
-      "9c8fc822f5f6c979da74e816a354bb84de5d0fe651bcd7dd6aa468485adcc0ae", 0, 0, 0 },
+      "a2a6fa219931f230e4f9a943abff60fb",
+      "69fb32292478b7c6ddd8ebdebe0c0c5a84beb4b18f0238710219a40a0cbc6dfb", 0, 0, 0 },
 
     { "beta-01", Kind::Beta,
       "b68d0cc9108a458fb89e423862bb0eb5",
