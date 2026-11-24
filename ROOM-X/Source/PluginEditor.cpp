@@ -46,7 +46,7 @@ RoomXEditor::RoomXEditor (RoomXProcessor& p)
 
     addAndMakeVisible (content);
     for (juce::Component* c : std::initializer_list<juce::Component*> {
-             &topBar, &spaceSel, &inputFader, &preDelay, &preDiv, &mix, &decay, &size, &preSync, &killDry, &mixLock,
+             &topBar, &spaceSel, &duck, &inputFader, &preDelay, &preDiv, &mix, &decay, &size, &preSync, &killDry, &mixLock,
              &noteScape, &target, &position, &density, &offset, &outputFader, &dualMono,
              &spectrum, &noteMode, &notesLock, &manualPanel, &sequencePanel, &midiPanel, &bypass })
         content.addAndMakeVisible (c);
@@ -129,6 +129,9 @@ void RoomXEditor::applyLanguage()
     for (auto& k : knobs) { k.k->title = tr (k.pt, k.en); k.k->repaint(); }
 
     target.caption = tr ("ALVO", "TARGET");
+    duck.caption = "DUCK";
+    duck.setLabels ({ "Off", tr ("Leve", "Low"), tr ("Médio", "Mid"), tr ("Forte", "High") });
+    duck.setTooltip (tr ("O reverb baixa enquanto a entrada toca e volta nas pausas: voz clara com cauda grande.", "The reverb dips while the input plays and returns in the gaps: clear vocal with a big tail."));
     target.setLabels ({ tr ("Inicial", "Early"), tr ("Tudo", "All"), tr ("Cauda", "Late") });
     noteMode.setLabels ({ "Manual", tr ("Sequência", "Sequence"), "MIDI" });
 
@@ -211,15 +214,16 @@ void RoomXEditor::layoutContent()
         auto r = rightPanel.reduced (10, 12);
         outputFader.setBounds (r.removeFromRight (64));
         r.removeFromRight (8);
-        const int cw = r.getWidth() / 2, rh = 128;
+        const int cw = r.getWidth() / 2, rh = 118;
         auto row1 = r.removeFromTop (rh), row2 = r.removeFromTop (rh);
         target.setBounds (row1.removeFromLeft (cw).reduced (10, 8).withTrimmedBottom (4));
         position.setBounds (row1.reduced (6, 0));
         density.setBounds (row2.removeFromLeft (cw).reduced (6, 0));
         offset.setBounds (row2.reduced (6, 0));
         r.removeFromTop (14);
-        auto row3 = r.removeFromTop (30);
-        dualMono.setBounds (row3.withSizeKeepingCentre (110, 28));
+        auto row3 = r.removeFromTop (54);
+        duck.setBounds (row3.removeFromLeft (cw + 40).reduced (4, 0));
+        dualMono.setBounds (row3.removeFromBottom (30).withSizeKeepingCentre (110, 28));
     }
 
     // ---- espectro

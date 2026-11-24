@@ -104,7 +104,7 @@ private:
 
 // ---------------------------------------------------------------------------
 // Selector segmentado ligado a um parâmetro de escolha (Target, Note Mode...)
-class SegmentedChoice : public juce::Component
+class SegmentedChoice : public juce::Component, public juce::SettableTooltipClient
 {
 public:
     SegmentedChoice (APVTS& s, const juce::String& paramId, juce::StringArray labels, bool vertical = false);

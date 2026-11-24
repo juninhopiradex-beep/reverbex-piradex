@@ -88,8 +88,10 @@ private:
                            *decay, *size, *position, *density, *offset, *temper, *noteWidth, *target,
                            *rangeLow, *rangeHigh, *lowCut, *lowCutSlope, *highCut, *highCutSlope,
                            *space, *dualMono, *bypass, *eco, *noteMode, *notes, *midiOctave, *midiRelease,
-                           *seqBars, *seqTranspose, *seqArmed, *seqOffset, *tuneRef, *tuneCents;
+                           *seqBars, *seqTranspose, *seqArmed, *seqOffset, *tuneRef, *tuneCents, *duck;
     } raw {};
+    // 2.2 DUCK: envolvente da entrada -> o wet baixa enquanto a voz toca e volta na pausa
+    float duckEnv = 0.0f, duckGr = 0.0f, duckAtk = 0.0f, duckRel = 0.0f, duckMaxDb = 0.0f;
 
     // sequência: troca sem bloqueio entre a thread de mensagens e a de áudio
     juce::SpinLock seqLock;

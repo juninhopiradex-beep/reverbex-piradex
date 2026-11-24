@@ -204,6 +204,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
     util->addChild (std::make_unique<APB> (PID { notesLock, 1 }, "Notes Lock", false, juce::AudioParameterBoolAttributes().withAutomatable (false)));
     layout.add (std::move (util));
 
+    // ---------------------------------------------------------------- 2.2 (no fim: os parametros antigos nao mudam de posicao)
+    auto dk = std::make_unique<juce::AudioProcessorParameterGroup> ("ducking", "Ducking", "|");
+    dk->addChild (std::make_unique<juce::AudioParameterChoice> (PID { duck, 2 }, "Duck", juce::StringArray { "Off", "Light", "Medium", "Strong" }, 0));
+    layout.add (std::move (dk));
+
     return layout;
 }
 } // namespace roomx::params

@@ -16,7 +16,7 @@ RoomXProcessor::RoomXProcessor()
       apvts (*this, &undoManager, "ROOMX", P::createLayout())
 {
     auto f = [this] (const char* id) { auto* p = apvts.getRawParameterValue (id); jassert (p != nullptr); return p; };
-    raw.input = f (P::input);         raw.output = f (P::output);       raw.mix = f (P::mix);
+    raw.duck = f (P::duck); raw.input = f (P::input);         raw.output = f (P::output);       raw.mix = f (P::mix);
     raw.killDry = f (P::killDry);     raw.preDelay = f (P::preDelay);   raw.preDelaySync = f (P::preDelaySync);
     raw.preDelayDiv = f (P::preDelayDiv); raw.decay = f (P::decay);     raw.size = f (P::size);
     raw.position = f (P::position);   raw.density = f (P::density);     raw.offset = f (P::offset);
@@ -258,6 +258,7 @@ void RoomXProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiB
     dryGainSm.setTarget (kill ? 0.0f : std::cos (mixAmt * juce::MathConstants<float>::halfPi));
     wetGainSm.setTarget (std::sin (mixAmt * juce::MathConstants<float>::halfPi));
     bypassTarget = raw.bypass->load() > 0.5f ? 1.0f : 0.0f;
+    { static const float kDuckDb[4] = { 0.0f, 4.0f, 8.0f, 14.0f }; duckMaxDb = kDuckDb[juce::jlimit (0, 3, (int) raw.duck->load())]; }
 
     // ---- processamento em pedaços do tamanho preparado
     const bool monoIn = numIn == 1;
@@ -322,9 +323,20 @@ void RoomXProcessor::processChunk (juce::AudioBuffer<float>& buffer, int start, 
         analysisFifo.finishedWrite (z1 + z2);
     }
 
+    const float sr = (float) getSampleRate();
+    duckAtk = 1.0f - std::exp (-1.0f / (0.005f * sr)); duckRel = 1.0f - std::exp (-1.0f / (0.35f * sr));
+    const float grCoef = 1.0f - std::exp (-1.0f / (0.010f * sr));
     for (int i = 0; i < n; ++i)
     {
-        const float dg = dryGainSm.next(), wg = wetGainSm.next(), og = outGainSm.next();
+        float dg = dryGainSm.next(), wg = wetGainSm.next(); const float og = outGainSm.next();
+        {   // DUCK: deteta a entrada (seco) e baixa o wet ate duckMaxDb quando ela passa de ~-45 dBFS
+            const float a = juce::jmax (std::abs (dL[i]), std::abs (dR[i]));
+            duckEnv += (a > duckEnv ? duckAtk : duckRel) * (a - duckEnv);
+            const float envDb = juce::Decibels::gainToDecibels (duckEnv, -120.0f);
+            const float want = duckMaxDb * juce::jlimit (0.0f, 1.0f, (envDb + 45.0f) / 35.0f);
+            duckGr += grCoef * (want - duckGr);
+            if (duckGr > 0.01f) wg *= juce::Decibels::decibelsToGain (-duckGr);
+        }
         bypassMix = bypassTarget > bypassMix ? juce::jmin (bypassTarget, bypassMix + bypassStep)
                                              : juce::jmax (bypassTarget, bypassMix - bypassStep);
         const float b = bypassMix;

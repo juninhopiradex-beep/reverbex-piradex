@@ -145,6 +145,33 @@ static void testLicensing()
 }
 
 // -----------------------------------------------------------------------------
+// 2.2 DUCK: com a entrada a tocar o wet baixa; quando a entrada para, a cauda volta
+static void testDuck()
+{
+    std::printf ("[duck]\n");
+    auto run = [] (int duckIdx)
+    {
+        RoomXProcessor p;
+        setParam (p, P::mix, 100.0f); setParam (p, P::killDry, 1.0f); setParam (p, P::temper, 0.0f); setParam (p, P::duck, (float) duckIdx);
+        p.prepareToPlay (48000.0, 512); juce::MidiBuffer midi; juce::AudioBuffer<float> buf (2, 512);
+        double during = 0.0, after = 0.0;
+        for (int blk = 0; blk < 300; ++blk)
+        {
+            if (blk < 150) fillNoise (buf, (unsigned) blk + 7); else buf.clear();   // 1,6 s de "voz", depois silencio
+            p.processBlock (buf, midi);
+            const double e = buf.getRMSLevel (0, 0, 512) + buf.getRMSLevel (1, 0, 512);
+            if (blk >= 100 && blk < 150) during += e;
+            if (blk >= 170 && blk < 200) after += e;
+        }
+        return std::make_pair (during, after);
+    };
+    const auto off = run (0), strong = run (3);
+    const double dDuring = 20.0 * std::log10 (strong.first / off.first), dAfter = 20.0 * std::log10 (strong.second / off.second);
+    std::printf ("  wet com a entrada a tocar: %.1f dB ; na pausa: %.1f dB (DUCK Forte vs Off)\n", dDuring, dAfter);
+    check (dDuring < -8.0, "DUCK Forte baixa o wet enquanto a entrada toca");
+    check (dAfter > -3.0, "DUCK: na pausa a cauda volta (sem ficar abafada)");
+}
+
 static void testTransparencyAndReverb()
 {
     std::printf ("[áudio]\n");
@@ -736,6 +763,7 @@ int main (int argc, char** argv)
     juce::ScopedJuceInitialiser_GUI gui;
     testLicensing();
     testTransparencyAndReverb();
+    testDuck();
     testState();
     testPresets();
     testRates();

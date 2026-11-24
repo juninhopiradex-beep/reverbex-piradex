@@ -1,5 +1,10 @@
 # Changelog — ROOM-X by Piradex
 
+## 2.2.0 — 2026-11-24
+- **DUCK** (Off / Leve / Médio / Forte, painel da direita): o reverb baixa até 4 / 8 / 14 dB enquanto a entrada toca e volta nas pausas (ataque 5 ms, recuperação 350 ms). Voz clara com cauda grande, sem automação. Parâmetro novo no fim da lista: as sessões e automações antigas não mudam.
+- Repositório arrumado: o ReverbEx antigo (JUCE 7) passou para `legacy-reverbex/` e deixou de ser compilado em cada push.
+- Nova senha master (a anterior estava escrita no repositório).
+
 ## 2.1.0 — 2026-11-20
 - **Chaves de licença online (PCC)**: no ecrã de senha também se pode escrever uma chave `RMX-XXXX-XXXX-XXXX`, validada no PCC (Plugin Control Central). Fica presa ao primeiro computador que a ativar, funciona 14 dias sem internet e é revalidada no máximo 1 vez por dia; desativada no PCC, deixa de abrir o plugin. A senha master e as senhas beta continuam offline, como antes.
 

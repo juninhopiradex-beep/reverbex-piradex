@@ -46,6 +46,7 @@ inline constexpr const char* tuneRef      = "tuneRef";
 inline constexpr const char* tuneCents    = "tuneCents";
 inline constexpr const char* mixLock      = "mixLock";
 inline constexpr const char* notesLock    = "notesLock";
+inline constexpr const char* duck         = "duck";        // 2.2: o wet baixa quando a entrada toca (vozes)
 
 enum class NoteMode : int { Manual = 0, Sequence = 1, Midi = 2 };
 
