@@ -12,18 +12,12 @@ namespace roomx::lic
 static const KeyEntry kKeys[] =
 {
     { "master", Kind::Master,
-      "a2a6fa219931f230e4f9a943abff60fb",
-      "69fb32292478b7c6ddd8ebdebe0c0c5a84beb4b18f0238710219a40a0cbc6dfb", 0, 0, 0 },
+      "5c6d85a66e1d50ff777084edb6d83da0",
+      "90e0577cb564f74ecd6305d9fee8d832497c3182b3b6c3e53c84eaec55d585aa", 0, 0, 0 },
 
     { "beta-01", Kind::Beta,
-      "b68d0cc9108a458fb89e423862bb0eb5",
-      "de27bdb46122633d31ded7a88b734f702322c0bbaecf76d56d4f029975582ba3", 2026, 12, 31 },
-    { "beta-02", Kind::Beta,
-      "74febec5eddb566c13c96c3d350d8ffb",
-      "dcb14e25b38c8a9086f6572f50e2396c3b13c4d17d3795b249943f127a0b3f1c", 2026, 12, 31 },
-    { "beta-03", Kind::Beta,
-      "8d794ed6bd31cd4159406de4e92f8ae1",
-      "cba091d0440d4366ec50a1945133056611b6e0961465430966da1c5cf6041142", 2026, 12, 31 },
+      "d5fafd10f13098c981a313157040c361",
+      "26443c47010019126a5b552c3664279d06aa5956f99b75a4ab193d2e64330ede", 2026, 12, 31 },
 };
 
 int LocalPasswordLicenseProvider::numKeys() { return (int) std::size (kKeys); }
