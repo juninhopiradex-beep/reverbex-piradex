@@ -437,7 +437,7 @@ void SegmentedChoice::mouseExit (const juce::MouseEvent&)
 LanguageSwitch::LanguageSwitch (const Accent* a) : accent (a)
 {
     setMouseCursor (juce::MouseCursor::PointingHandCursor);
-    setTooltip (U ("Idioma da interface  ·  Interface language"));
+    setTooltip (U ("Idioma da interface  ·  Interface language  ·  界面语言"));
     piradex::i18n::addListener (this);
 }
 
@@ -445,8 +445,9 @@ LanguageSwitch::~LanguageSwitch() { piradex::i18n::removeListener (this); }
 
 juce::Rectangle<float> LanguageSwitch::half (int i) const
 {
-    auto r = getLocalBounds().toFloat().reduced (1.0f);
-    return i == 0 ? r.removeFromLeft (r.getWidth() * 0.5f) : r.withTrimmedLeft (r.getWidth() * 0.5f);
+    auto r = getLocalBounds().toFloat().reduced (1.0f);   // 1.0.2: tres partes (PT / EN / ZH)
+    const float w = r.getWidth() / 3.0f;
+    return { r.getX() + w * (float) i, r.getY(), w, r.getHeight() };
 }
 
 void LanguageSwitch::paint (juce::Graphics& g)
@@ -460,8 +461,8 @@ void LanguageSwitch::paint (juce::Graphics& g)
 
     const int sel = (int) piradex::i18n::current();
     const auto acc = accent != nullptr ? accent->current : col::all;
-    static const char* names[] = { "PT", "EN" };
-    for (int i = 0; i < 2; ++i)
+    static const char* names[] = { "PT", "EN", "\xe4\xb8\xad\xe6\x96\x87" };
+    for (int i = 0; i < 3; ++i)
     {
         auto r = half (i).reduced (2.0f);
         if (i == sel)
@@ -478,20 +479,21 @@ void LanguageSwitch::paint (juce::Graphics& g)
         }
         g.setColour (i == sel ? col::text : col::textDim);
         g.setFont (Fonts::caps (juce::jmin (13.0f, r.getHeight() * 0.52f), 0.10f));
-        g.drawText (names[i], r, juce::Justification::centred);
+        g.drawText (juce::String::fromUTF8 (names[i]), r, juce::Justification::centred);
     }
 }
 
 void LanguageSwitch::mouseDown (const juce::MouseEvent& e)
 {
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < 3; ++i)
         if (half (i).contains (e.position))
             piradex::i18n::set ((piradex::i18n::Language) i);
 }
 
 void LanguageSwitch::mouseMove (const juce::MouseEvent& e)
 {
-    const int h = half (0).contains (e.position) ? 0 : (half (1).contains (e.position) ? 1 : -1);
+    int h = -1;
+    for (int i = 0; i < 3; ++i) if (half (i).contains (e.position)) h = i;
     if (h != hover) { hover = h; repaint(); }
 }
 

@@ -29,6 +29,7 @@ public:
 
     static constexpr int kBaseW = 1180, kBaseH = 800;
     roomx::ui::Context& uiContext() noexcept { return ctx; }   // testes / capturas
+    void showWelcome();                                           // 1.0.2: tutorial e novidades
 
 private:
     RoomXProcessor& proc;
@@ -47,6 +48,7 @@ private:
 
     // ---- topo
     roomx::ui::TopBar topBar { ctx, *proc.presets };
+    std::unique_ptr<piradex::kit::Welcome> welcome;
     roomx::ui::SpaceSelector spaceSel { ctx };
 
     // ---- esquerda

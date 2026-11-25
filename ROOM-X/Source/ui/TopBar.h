@@ -6,6 +6,7 @@
 
 #include "Context.h"
 #include "../state/PresetManager.h"
+#include "../i18n/PiradexKitUI.h"
 
 namespace roomx::ui
 {
@@ -21,7 +22,7 @@ public:
     void mouseDown (const juce::MouseEvent&) override;
     void tick();
 
-    std::function<void()> onInfo, onTuning;
+    std::function<void()> onInfo, onTuning, onWelcome;
     IconButton tuning { Icon::Fork, "Afinação global (A4 / cents / sustenidos-bemóis)", "Global tuning (A4 / cents / sharps-flats)" };
 
 private:
@@ -32,6 +33,7 @@ private:
     IconButton save { Icon::Save, "Guardar / importar presets", "Save / import presets" };
     IconButton info { Icon::Info, "Informação, licença e definições (idioma)", "Info, license and settings (language)" };
     IconButton eco  { Icon::Leaf, "Modo Eco: menos CPU (cauda de 8 linhas, analisador mais lento)", "Eco mode: less CPU (8-line tail, slower analyzer)" };
+    piradex::kit::GearButton gear;   // 1.0.2: idioma PT / EN / ZH + tutorial e novidades
     juce::TextButton slotA { "A" }, slotB { "B" };
     IconButton copyAB { Icon::Copy, "Copiar A para B (ou B para A)", "Copy A to B (or B to A)" };
     std::unique_ptr<APVTS::ButtonAttachment> ecoAtt;

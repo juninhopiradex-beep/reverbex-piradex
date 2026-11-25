@@ -77,6 +77,7 @@ set(ROOMX_SOURCES
     Source/state/SequenceModel.cpp
     Source/licensing/License.cpp
     Source/i18n/PiradexLanguage.cpp
+    Source/i18n/ZhTable.cpp
     Source/ui/LookAndFeel.cpp
     Source/ui/Widgets.cpp
     Source/ui/NoteScape.cpp

@@ -1,4 +1,5 @@
 #include "PluginProcessor.h"
+#include "i18n/PiradexLanguage.h"
 #include "PluginEditor.h"
 #include "licensing/License.h"
 
@@ -15,6 +16,7 @@ RoomXProcessor::RoomXProcessor()
                         .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
       apvts (*this, &undoManager, "ROOMX", P::createLayout())
 {
+    piradex::i18n::registerPluginTable();   // 1.0.2: traducoes PT / EN / ZH
     auto f = [this] (const char* id) { auto* p = apvts.getRawParameterValue (id); jassert (p != nullptr); return p; };
     raw.duck = f (P::duck); raw.input = f (P::input);         raw.output = f (P::output);       raw.mix = f (P::mix);
     raw.killDry = f (P::killDry);     raw.preDelay = f (P::preDelay);   raw.preDelaySync = f (P::preDelaySync);

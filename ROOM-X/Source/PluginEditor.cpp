@@ -84,6 +84,7 @@ RoomXEditor::RoomXEditor (RoomXProcessor& p)
         showCallout (std::make_unique<InfoPanel> (ctx, [this] { logout(); }), topBar);
     };
     topBar.onTuning = [this] { showCallout (std::make_unique<TuningPanel> (ctx), topBar.tuning); };
+    topBar.onWelcome = [this] { showWelcome(); };
 
     login.onUnlocked = [this]
     {
@@ -93,6 +94,7 @@ RoomXEditor::RoomXEditor (RoomXProcessor& p)
     };
     wasLicensed = lic::License::get().isUnlocked();
     login.setVisible (! wasLicensed);
+    if (piradex::kit::Welcome::shouldShow ("roomx", ROOMX_VERSION_STRING)) showWelcome();   // 1.0.2: 3 primeiras aberturas de cada versao
 
     addMouseListener (this, true);
     setWantsKeyboardFocus (true);
@@ -242,6 +244,32 @@ void RoomXEditor::layoutContent()
     bypass.setBounds (footer.getRight() - 104, footer.getY() + 3, 90, 22);
 
     login.setBounds (0, 0, kBaseW, kBaseH);
+    if (welcome != nullptr) welcome->setBounds (0, 0, kBaseW, kBaseH);
+}
+
+void RoomXEditor::showWelcome()
+{
+    using W = piradex::kit::WelcomeItem;
+    welcome = std::make_unique<piradex::kit::Welcome> ("ROOM-X", col::all, ROOMX_VERSION_STRING, std::vector<W> {
+        W { "Reverb afinada", "Tuned reverb",
+            "O ROOM-X real\xc3\xa7" "a as notas que escolher e atenua as outras: a cauda fica dentro do tom da m\xc3\xbasica.",
+            "ROOM-X boosts the notes you pick and softens the others: the tail stays in the key of the song." },
+        W { "Escolher as notas", "Picking the notes",
+            "Manual (clique nas notas ou numa escala), Sequence (as notas mudam com os compassos) ou MIDI (toque as notas no teclado).",
+            "Manual (click the notes or a scale), Sequence (the notes change with the bars) or MIDI (play the notes on a keyboard)." },
+        W { "Early / All / Late", "Early / All / Late",
+            "Escolha onde o Tempero atua: nas primeiras reflex\xc3\xb5" "es, em toda a cauda ou s\xc3\xb3 no fim.",
+            "Choose where the tempering acts: on the early reflections, the whole tail or only its end." },
+        W { "Duck e Kill Dry", "Duck and Kill Dry",
+            "Duck baixa a reverb enquanto a voz canta. Kill Dry deixa s\xc3\xb3 o sinal molhado para usar num envio.",
+            "Duck lowers the reverb while the vocal sings. Kill Dry leaves only the wet signal for use on a send." },
+        W { "Novo na 1.0.2", "New in 1.0.2",
+            "Idioma PT / EN / \xe4\xb8\xad\xe6\x96\x87 na roda dentada, novo ecr\xc3\xa3 de entrada Piradex e menos CPU: o motor descansa quando a entrada e a cauda est\xc3\xa3o em sil\xc3\xaancio.",
+            "PT / EN / \xe4\xb8\xad\xe6\x96\x87 language in the gear menu, new Piradex sign-in screen and less CPU: the engine rests when the input and the tail are silent." } });
+    welcome->onClose = [safe = juce::Component::SafePointer<RoomXEditor> (this)] { if (safe != nullptr) juce::MessageManager::callAsync ([safe] { if (safe != nullptr) safe->welcome.reset(); }); };
+    content.addAndMakeVisible (*welcome);
+    welcome->setBounds (0, 0, kBaseW, kBaseH);
+    welcome->toFront (true);
 }
 
 void RoomXEditor::Content::paint (juce::Graphics& g)

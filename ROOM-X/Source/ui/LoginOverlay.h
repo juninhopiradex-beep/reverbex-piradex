@@ -1,20 +1,20 @@
 // =============================================================================
-//  ROOM-X — ecrã de login (bloqueia a UI até haver autorização)
-//  A verificação PBKDF2 corre numa thread à parte; o resultado é aplicado na
-//  thread de mensagens. Enquanto bloqueado, o áudio passa intacto.
+//  ROOM-X — ecra de login (1.0.2: ecra unico Piradex do kit partilhado)
+//  A verificacao PBKDF2 corre numa thread a parte; o resultado e aplicado na
+//  thread de mensagens. Enquanto bloqueado, o audio passa intacto.
 // =============================================================================
 #pragma once
 
 #include "Context.h"
+#include "../i18n/PiradexKitUI.h"
 
 namespace roomx::ui
 {
-class LoginOverlay : public juce::Component, private juce::Timer, private piradex::i18n::Listener
+class LoginOverlay : public juce::Component, private juce::Timer
 {
 public:
     explicit LoginOverlay (Accent& a);
     ~LoginOverlay() override;
-    void paint (juce::Graphics&) override;
     void resized() override;
     void visibilityChanged() override;
     void mouseDown (const juce::MouseEvent&) override {}   // engole cliques
@@ -23,17 +23,11 @@ public:
 
 private:
     Accent& accent;
-    juce::TextEditor password;
-    juce::ToggleButton remember;
-    juce::TextButton enter;
-    LanguageSwitch language { &accent };
-    juce::Label message;
+    piradex::kit::LoginScreen screen;
     std::shared_ptr<std::atomic<bool>> alive = std::make_shared<std::atomic<bool>> (true);
     bool busy = false;
 
-    juce::Rectangle<int> card() const;
-    void submit();
+    void submit (const juce::String& pw, bool rem);
     void timerCallback() override;
-    void languageChanged() override;
 };
 } // namespace roomx::ui

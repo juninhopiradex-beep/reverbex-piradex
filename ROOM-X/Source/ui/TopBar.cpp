@@ -82,6 +82,9 @@ TopBar::TopBar (Context& c, state::PresetManager& pm) : ctx (c), presets (pm)
     next.onClick = [this] { presets.loadNext(); repaint(); };
     save.onClick = [this] { showSaveMenu(); };
     info.onClick = [this] { if (onInfo) onInfo(); };
+    gear.colour = col::textDim; gear.hoverColour = col::text;
+    gear.showWelcome = [this] { if (onWelcome) onWelcome(); };
+    addAndMakeVisible (gear);
     tuning.onClick = [this] { if (onTuning) onTuning(); };
 
     for (auto* b : { &slotA, &slotB })
@@ -108,6 +111,7 @@ void TopBar::resized()
     auto right = r.removeFromRight (200);
     eco.setBounds (right.removeFromRight (34)); right.removeFromRight (6);
     info.setBounds (right.removeFromRight (34)); right.removeFromRight (6);
+    gear.setBounds (right.removeFromRight (34).reduced (5)); right.removeFromRight (6);
     tuning.setBounds (right.removeFromRight (34));
     r.removeFromRight (14);
     auto ab = r.removeFromRight (124);
