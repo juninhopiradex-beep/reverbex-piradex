@@ -6,6 +6,7 @@ Reverb modal musical para **macOS (AU + VST3 + AAX, Universal 2: Intel + Apple S
 >
 > * **Login:** obrigatório desde a 1.0.1 — senha master, senha beta (válida até 31/12/2026) ou chave de licença validada online no PCC. Sem sessão, o áudio passa intacto.
 > * **Instaladores (loja www.beatfreakstudio.com/loja):** Mac Apple Silicon (`…-macOS-AppleSilicon.pkg`), Mac Intel com macOS 10.13 ou mais recente (`…-macOS-Intel-macOS10.13.pkg`), Windows (`…-Windows-Setup.exe`) e AAX para Pro Tools (`…-AAX-*.zip`, ver LEIA-ME-AAX.txt).
+> * **Idioma e boas-vindas (1.0.2):** interface em Português, English e 中文 (mandarim), escolhida na roda dentada e comum a todos os plugins Piradex; ecrã de login Piradex igual em todos; pop-up de tutorial e novidades nas 3 primeiras aberturas de cada versão (reabre pelo menu).
 > * **Criador e desenvolvedor:** Ricardo Amorim / Juninho Piradex.
 
 Uma reverb de estúdio premium cujo campo ressonante se afina por **notas, acordes, escalas, sequências harmónicas ou MIDI ao vivo**. O **Tempero** realça (+) ou escava (−) essas ressonâncias; o **Target** decide se actua nas reflexões iniciais (**EARLY**, coral), em tudo (**ALL**, teal) ou na cauda (**LATE**, azul eléctrico) — e o acento da interface muda de cor com ele.
