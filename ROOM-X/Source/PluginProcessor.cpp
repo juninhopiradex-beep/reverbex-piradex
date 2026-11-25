@@ -311,8 +311,29 @@ void RoomXProcessor::processChunk (juce::AudioBuffer<float>& buffer, int start, 
         }
         return;
     }
+    // 1.0.2: entrada em silencio e a cauda ja abaixo de -120 dB -> o motor descansa (poupa CPU em sessoes grandes)
+    {
+        const float ipk = juce::jmax (inPk[0], inPk[1]);
+        quietIn = ipk < 1.0e-7f ? juce::jmin (quietIn + n, 1 << 30) : 0;
+        if (quietIn == 0) sleepingRx = false;
+        if (sleepingRx && ! isNonRealtime())
+        {
+            for (int i = 0; i < n; ++i)
+            {
+                if (outR != nullptr) { outL[i] = 0.0f; outR[i] = 0.0f; } else outL[i] = 0.0f;
+                dryGainSm.next(); wetGainSm.next(); outGainSm.next();
+            }
+            return;
+        }
+    }
     engineIdle = false;
     engine.process (dL, dR, wL, wR, n, ep);
+    if (quietIn > (int) (0.5 * currentRate.load()))
+    {
+        float wpk = 0.0f;
+        for (int i = 0; i < n; ++i) wpk = juce::jmax (wpk, std::abs (wL[i]), std::abs (wR[i]));
+        if (wpk < 1.0e-6f) sleepingRx = true;
+    }
 
     // análise (wet mono, pós-filtros)
     {

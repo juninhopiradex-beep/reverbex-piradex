@@ -115,6 +115,7 @@ private:
     roomx::dsp::Smoother inGainSm, outGainSm, dryGainSm, wetGainSm;
     float bypassMix = 0.0f, bypassTarget = 0.0f, bypassStep = 0.001f;
     bool  engineIdle = false;
+    int   quietIn = 0; bool sleepingRx = false;   // 1.0.2: silencio -> o motor descansa
 
     // ValueTree::Listener / AsyncUpdater (sequência -> áudio)
     void valueTreePropertyChanged (juce::ValueTree&, const juce::Identifier&) override;

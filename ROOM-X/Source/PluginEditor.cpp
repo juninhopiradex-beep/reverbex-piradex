@@ -273,7 +273,7 @@ void RoomXEditor::Content::paint (juce::Graphics& g)
     auto f = e.footer.reduced (16, 0);
     g.setColour (col::textFaint);
     g.setFont (Fonts::text (13.0f));
-    g.drawText (U ("ROOM-X by Piradex  ·  v") + ROOMX_VERSION_STRING + U ("  ·  Beatfreak Developer"), f, juce::Justification::centredLeft);
+    g.drawText (U ("ROOM-X by Piradex  ·  v") + ROOMX_VERSION_STRING + U ("  ·  Ricardo Amorim / Juninho Piradex"), f, juce::Justification::centredLeft);
     auto& L = lic::License::get();
     if (L.isUnlocked())
     {

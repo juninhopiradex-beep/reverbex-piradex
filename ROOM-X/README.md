@@ -1,6 +1,12 @@
 # ROOM-X by Piradex
 
-Reverb modal musical para **macOS (AU + VST3 + AAX, Universal 2: Intel + Apple Silicon, 10.13+)** e **Windows 10/11 (VST3 + AAX x64)**. Interface em **Português e Inglês**. JUCE 8 / C++17. Versão **2.1.0**.
+Reverb modal musical para **macOS (AU + VST3 + AAX, Universal 2: Intel + Apple Silicon, 10.13+)** e **Windows 10/11 (VST3 + AAX x64)**. Interface em **Português e Inglês**. JUCE 8 / C++17. Versão **1.0.1**.
+
+> **Versão atual: 1.0.2** (todos os plugins Piradex passaram a ter a mesma numeração; as versões abaixo de "Histórico" são da numeração antiga).
+>
+> * **Login:** obrigatório desde a 1.0.1 — senha master, senha beta (válida até 31/12/2026) ou chave de licença validada online no PCC. Sem sessão, o áudio passa intacto.
+> * **Instaladores (loja www.beatfreakstudio.com/loja):** Mac Apple Silicon (`…-macOS-AppleSilicon.pkg`), Mac Intel com macOS 10.13 ou mais recente (`…-macOS-Intel-macOS10.13.pkg`), Windows (`…-Windows-Setup.exe`) e AAX para Pro Tools (`…-AAX-*.zip`, ver LEIA-ME-AAX.txt).
+> * **Criador e desenvolvedor:** Ricardo Amorim / Juninho Piradex.
 
 Uma reverb de estúdio premium cujo campo ressonante se afina por **notas, acordes, escalas, sequências harmónicas ou MIDI ao vivo**. O **Tempero** realça (+) ou escava (−) essas ressonâncias; o **Target** decide se actua nas reflexões iniciais (**EARLY**, coral), em tudo (**ALL**, teal) ou na cauda (**LATE**, azul eléctrico) — e o acento da interface muda de cor com ele.
 
@@ -40,7 +46,7 @@ O GitHub Actions (`.github/workflows/roomx.yml`) compila tudo a cada push que me
 - testes DSP + testes do plugin (com capturas da interface),
 - **macOS**: AU + VST3 Universal 2, verificação `lipo` e macOS mínimo 10.13, `auval` (Apple Silicon e Intel/Rosetta), pluginval, `.pkg` + `.dmg`,
 - **Windows**: VST3 x64 sem dependência do VC++ Redistributable, pluginval, instalador Inno Setup + `.zip`,
-- publica a versão `roomx-v2.1.0` com o `.dmg`, o `Setup.exe`, o `.zip` e os `.zip` AAX.
+- publica a versão `roomx-v1.0.1` com o `.dmg`, o `Setup.exe`, o `.zip` e os `.zip` AAX.
 
 Localmente:
 ```
@@ -59,8 +65,8 @@ O AAX é compilado no GitHub Actions para macOS (Universal 2) e Windows x64 — 
 O Pro Tools normal só carrega plugins AAX **assinados pela PACE** (`wraptool`, conta PACE/iLok). Sem essas credenciais, o CI publica `...-AAX-nao-assinado.zip`, que só abre no *Pro Tools Developer*. Para assinar automaticamente, adiciona nos *Secrets* do repositório: `PACE_ACCOUNT`, `PACE_PASSWORD`, `PACE_WCGUID`, `PACE_EDEN_URL` (instalador Mac das ferramentas Eden) e, para Windows, `PACE_EDEN_WIN_URL`, `PACE_KEYFILE_B64`, `PACE_KEYPASSWORD`. A partir daí sai `...-AAX-assinado.zip`.
 
 ## Instalação
-- **macOS**: abrir o `.dmg` → `ROOM-X by Piradex 2.1.0.pkg` (VST3 em `/Library/Audio/Plug-Ins/VST3`, AU em `/Library/Audio/Plug-Ins/Components`). No Logic, para o modo MIDI carregue-o como *MIDI-controlled Effect*.
-- **Windows**: `ROOM-X-by-Piradex-2.1.0-Windows-Setup.exe` instala em `C:\Program Files\Common Files\VST3`. Sem assinatura digital paga, o Windows pode mostrar "O Windows protegeu o seu PC": **Mais informações → Executar mesmo assim**.
+- **macOS**: abrir o `.dmg` → `ROOM-X by Piradex 1.0.1.pkg` (VST3 em `/Library/Audio/Plug-Ins/VST3`, AU em `/Library/Audio/Plug-Ins/Components`). No Logic, para o modo MIDI carregue-o como *MIDI-controlled Effect*.
+- **Windows**: `ROOM-X-by-Piradex-1.0.1-Windows-Setup.exe` instala em `C:\Program Files\Common Files\VST3`. Sem assinatura digital paga, o Windows pode mostrar "O Windows protegeu o seu PC": **Mais informações → Executar mesmo assim**.
 - Presets do utilizador: `~/Music/Piradex/ROOM-X/User Presets` (Mac) · `Documentos\Piradex\ROOM-X\User Presets` (Windows).
 
 ## Estrutura
